@@ -1,30 +1,44 @@
 #include <iostream.h>
 #include <dos.h>
-
-
-void interrupt syscallISR() {
-    asm {
-
-    }
-}
-
-unsigned int kSP, kSS;
+#include <kernel.h>
+#include <ffvector.h>
 
 int main(void) {
-    kSP = _SP;
-    kSS = _SS;
+    Kernel::init();
 
-    unsigned int *kstack = new unsigned int[1024];
+    asm mov ax, 101
+    asm int 61h
 
-    _SP = FP_OFF(kstack+1023);
-    _SS = FP_SEG(kstack+1023);
-    _BP = FP_OFF(kstack+1023);
-
-    int a = 10, b = 11, c = 12, d = 13, e = 14, f = 15, g = 16, h, i, j, k, l, m, n;
-
-    a++;
-
-    delete[] kstack;
+    //for(int i = 0; i < 30000; i++) {
+        //for(int j = 0; j < 30000; j++);
+    //}
 
     return 0;
+}
+
+
+
+void ffvectest(void) {
+    ffvector<int> testvec(3);
+
+    cout << "Empty length: " << testvec.length() << endl;
+
+    testvec.append(5);
+    testvec.append(4);
+    testvec.append(3);
+    testvec.append(2);
+
+    testvec.remove(2);
+    testvec.remove(3); // ERROR, OUT OF RANGE, didn't report
+
+    testvec.append(10);
+    testvec.append(12);
+
+    for(int i = 0; i < testvec.length(); i++) {
+        cout << testvec[i] << endl;
+    }
+
+    cout << "Used: " << testvec.usage() << endl;
+    cout << "Highest used: " << testvec.length() << endl;
+    cout << "Capacity: " << testvec.actual_size() << endl;
 }

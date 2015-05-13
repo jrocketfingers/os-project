@@ -7,6 +7,6 @@ typedef unsigned char byte;
 typedef unsigned char bool;
 typedef unsigned long StackSize;
 typedef unsigned int Time;
-typedef int ID;
+typedef unsigned int tid_t;
 
 #endif

@@ -36,7 +36,7 @@ Thread::Thread (StackSize stackSize = defaultStackSize, Time timeSlice = default
     newPCB->ss = FP_SEG(newPCB->stack + sp_i);
     newPCB->bp = FP_OFF(newPCB->stack + sp_i);
 
-    OS::enlistPCB(newPCB);
+    this->tid = OS::enlistPCB(newPCB);
 }
 
 void Thread::start() {

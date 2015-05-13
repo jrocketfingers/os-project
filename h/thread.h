@@ -26,7 +26,7 @@ protected:
 
 private:
     word *stack;
-    int tid;
+    tid_t tid;
 
     void call();
 };

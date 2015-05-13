@@ -1,0 +1,6 @@
+08h - systik
+
+off (seg)
+---------
+60h (62h) - old timer
+64h (66h) - syscall

@@ -1,12 +1,16 @@
 CFLAGS = -mh -IC:\BC31\INCLUDE;D:\H -LC:\BC31\LIB;D:\LIB -nOUTPUT
-experiment.exe: src/experi~1.cpp
-	BCC $(CFLAGS) src/experi~1.cpp
+experiment.exe: kernel.obj
+	BCC $(CFLAGS) src/experi~1.cpp output/kernel.obj APPLICAT.LIB
+	#TLINK output/experi~1.obj output/kernel.obj
+
+experiment.asm: kernel.obj
+	BCC $(CFLAGS) -S src/experi~1.cpp src/kernel.cpp
 
 main.obj: src/main.cpp
-	BCC $(CFLAGS) $*.cpp
+	BCC $(CFLAGS) $**
 
 thread.obj: src/thread.cpp
-	BCC $(CFLAGS) $**.cpp
+	BCC $(CFLAGS) $**
 
-os.obj: src/os.cpp
-	BCC $(CFLAGS) $*.cpp
+kernel.obj: src/kernel.cpp
+	BCC $(CFLAGS) -c $**
