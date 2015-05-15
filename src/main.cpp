@@ -1,3 +1,4 @@
+#include <iostream.h>
 #include <thread.h>
 #include <kernel.h>
 
@@ -27,8 +28,10 @@ private:
 int main(int argc, char* argv[]) {
     Kernel::init();
 
+    cout << "Pravi se userMain thread." << endl;
     UserMainThread* u = new UserMainThread(argc, argv);
 
+    cout << "Startuje se userMain thread." << endl;
     u->start();
 
     return 0;

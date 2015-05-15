@@ -8,6 +8,8 @@ unsigned int oldval, newval;
 
 int userMain(int argc, char *argv[]) {
     //Kernel::init();
+    cout << "In userMain.";
+
     unsigned int *stack = new unsigned int[64000];
     unsigned int sp = FP_OFF(stack+63999);
     unsigned int ss = FP_SEG(stack+63999);

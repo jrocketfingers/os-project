@@ -23,14 +23,15 @@ void Thread::start() {
     asm int 61h;
 }
 
+void Thread::~Thread() {}
 
-//void Thread::waitToComplete() {
-    //Kernel::waitFor(this->tid);
-//}
+
+void Thread::waitToComplete() {
+
+}
 
 
 /* Static method */
-//void Thread::sleep(Time timeToSleep) {
-    //Kernel::sleep(timeToSleep); // hence it does not have a this parameter to assign
-                            //// the sleep time to
-//}
+void Thread::sleep(Time timeToSleep) {
+
+}

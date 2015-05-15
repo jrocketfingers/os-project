@@ -24,6 +24,12 @@ unsigned int oldTimerOFF;
 /* ticker */
 unsigned int tick;
 
+/* temp registers */
+word tax, tbx, tcx, tdx, tes;
+
+/* flags */
+bool change_thread_on_ctx_switch = 0;
+
 /* list of available threads */
 ffvector<PCB*>* PCBs = 0;
 
@@ -53,18 +59,46 @@ void inline use_ctx(PCB* pcb) {
     _DX = pcb->dx;
     _ES = pcb->es;
 
-    running = pcb;
+    //running = pcb;
+    /* We're not gonna set running. Kernel thread can take over, without
+     * marking itself as the running thread. Why? We're pretty sure we're inside
+     * the kernel when we are even without checking running == kThread;
+     * What does this allow us? We switch back to the original thread by
+     * writting use_ctx(running). Oh and since it is impossible to save the
+     * kernel stack pointer and stuff, it'll ALWAYS start by using an empty
+     * stack. Awesome, a commented line does all this. */
+    /* Also, now running holds a reference to the PCB of the thread that
+     * initiated the syscall 'n' stuff. Super-useful. */
+
+    /* Why was all this written:
+     * DO NOT FORGET TO WRITE running = Scheduler::get(); in context switches! */
 }
 
 
-void sys_ctx_switch() {
-    save_ctx();
+/* not-really-an-interrupt */
+void interrupt sys_ctx_switch() {
+    /* basically this should be started only from the kernel thread,
+     * so there's no need to save the stack (kernel always starts with an empty)
+     * stack. */
 
-    running = Scheduler::get();
-
-    use_ctx(running);
+    if(change_thread_on_ctx_switch) {
+        cout << "Switching the context!" << endl;
+        Scheduler::put(running);
+        /* run the CPU time lottery
+         * fairest lottery ever -
+         * even the house (OS) doesn't know how's it selected */
+        running = Scheduler::get();
+        /* Oh wait, we've already written this. We're safe. (you can almost ignore
+         * the warning written in use_ctx */
+    }
 
     tick = running->timeSlice;
+    change_thread_on_ctx_switch = 0;
+
+    /* running ctx might not have been changed depending on the switch flag */
+    use_ctx(running);
+
+    cout << "Resuming the thread..." << endl;
 }
 
 
@@ -103,6 +137,10 @@ void sys_newthread() {
      * not all PCBs need to be enlisted - hence this isn't in the constructor.
      * kernel PCB remains unlisted and is switched to manually */
     newPCB->enlist(t);
+
+    asm mov bp, sp;
+    asm mov ax, [bp];
+    cout << "PCB enlisted 'n' stuff. Ready to switch! Should be 512: " << _AX << endl;
 }
 
 
@@ -118,53 +156,88 @@ void sys_dispatch() {
 }
 
 
-void interrupt syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_ds,
+void interrupt switch_to_syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_ds,
                        unsigned p_es, unsigned p_dx, unsigned p_cx, unsigned p_bx,
-                       unsigned p_ax, unsigned p_ip, unsigned p_cs) {
+                       unsigned p_ax, unsigned p_ip, unsigned p_cs, unsigned flags) {
 
-    cout << "System call." << endl;
+    cout << "System call. AX: " << p_ax << endl;
 
-    /* clean up interrupt parameters.
-     * the return sequence will be executed by sys_ctx_switch,
-     * which is a ---regular function call--- (cdecl). */
-    /* NOTE: do not mess with the bp value, as it is used to access all the
-     * interrupt parameters, they still DO exist on the running stack */
-    asm {
-        add sp, 18      // remove the registers stack
-        pop dx          // take cs
-        pop es          // take ip
-        push p_bp       // push the original bp
-        push es
-        push dx
-    }
-    /* the running stack is now prepared for beign stored in the scheduler */
-
-    /* save stack */
-    save_ctx();
-
+    /* transfer the parameters to the kthread */
     kThread->ax = p_ax;
     kThread->bx = p_bx;
     kThread->cx = p_cx;
     kThread->dx = p_dx;
     kThread->es = p_es;
 
+    /* clean up interrupt parameters.
+     * the return sequence will be executed by sys_ctx_switch,
+     * which is a ---regular function call--- (cdecl). */
+    /* NOTE: do not mess with the bp value, as it is used to access all the
+     * interrupt parameters, they still DO exist on the running stack */
+    tax = _AX;
+    tdx = _DX;
+    tes = _ES;
+    asm {
+        /* TO DO: <<<<<<<<<<<<<<<<<<<<<<<<<<
+         * Move up CS and IP because there's the flags register just above them in
+         * an interrupt call. A normal return will clean from the register
+         * only the CS and IP, ignoring the flags, and ruining the stack! */
+        mov sp, bp      // remove the registers stack (there's an extra sp -= 10)
+        add sp, 18
+        pop dx          // take ip
+        pop es          // take cs
+        add sp, 1       // skip the flags
+
+        push es
+        push dx
+        push p_bp       // push the original bp
+    }
+    _AX = tax;
+    _DX = tdx;
+    _ES = tes;
+
+    /* save stack */
+    save_ctx();
+
     /* switch to kernel stack */
     use_ctx(kThread);
+
+    /* add the context switch on top of the stack */
 
     /* use the original ax value based on bp */
     /* stack has been changed p_ax unavailable */
     switch(kThread->ax) {
         case 101:
             cout << "Dispatching." << endl;
+            asm mov ax, 0200h;
+            asm push ax;
             PUSHF(sys_dispatch)
             break;
         case 102:
             cout << "Making a new thread." << endl;
+            PUSHF(sys_ctx_resume);
+
+            /* setting up the flags */
+            asm mov ax, 0200h;
+            asm push ax;
+            /* pushing the handler */
             PUSHF(sys_newthread)
             break;
         default:
             cout << "default choice." << endl;
             break;
+    }
+
+    asm {
+        sub sp, 18
+        mov bp, sp      // prevent from old bp overtaking sp value
+
+        /* this segment is needed cause at the end of a call there's
+         * mov sp, bp; this effectively erases local variables off the stack
+         * unless this is configured properly, the stack blows */
+        mov ax, bp
+        add ax, 22      // calculate the old bp location
+        mov [bp], ax    // set the old bp
     }
 }
 
@@ -215,6 +288,15 @@ void Kernel::init() {
 void Kernel::stop() {}
 
 
+void Kernel::syscall() {
+    while(1) {
+
+
+        sys_ctx_switch();
+    }
+}
+
+
 void PCB::createStack(Thread* t, StackSize stackSize) {
     int sp_i;
 
@@ -253,6 +335,7 @@ void PCB::createStack(Thread* t, StackSize stackSize) {
 void PCB::enlist(Thread* t) {
     t->tid = PCBs->append(this);
 }
+
 
 void PCB::call(Thread* t) {
     t->run();
