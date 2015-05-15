@@ -3,15 +3,22 @@
 #include <kernel.h>
 #include <ffvector.h>
 
-int main(void) {
-    Kernel::init();
+unsigned int oldval, newval;
 
-    asm mov ax, 101
-    asm int 61h
 
-    //for(int i = 0; i < 30000; i++) {
-        //for(int j = 0; j < 30000; j++);
-    //}
+int userMain(int argc, char *argv[]) {
+    //Kernel::init();
+    unsigned int *stack = new unsigned int[64000];
+    unsigned int sp = FP_OFF(stack+63999);
+    unsigned int ss = FP_SEG(stack+63999);
+    unsigned int *topofstack = (unsigned int*)MK_FP(ss, sp);
+
+    stack[63999] = 102;
+
+    cout << "STACK: " << stack[63999] << endl;
+    cout << "TOS: " << *topofstack << endl;
+
+    delete[] stack;
 
     return 0;
 }

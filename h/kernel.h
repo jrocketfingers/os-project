@@ -1,31 +1,13 @@
 #ifndef __KERNEL_H__
 #define __KERNEL_H__
 
+#include <thread.h>
+#include <dos.h>
 #include <types.h>
 #include <ffvector.h>
 
 #define lock asm cli
 #define unlock asm sti
-
-
-
-class PCB {                      // Kernel's implementation of a user's thread
-public:
-    PCB(unsigned int stackSize, const char *name) : name(name)
-    {
-        stack = new unsigned int[stackSize];
-    }
-
-    word sp;
-    word ss;
-    word bp;
-    word cs;
-    word pc;
-    bool done;
-    int timeSlice;
-    unsigned int *stack;
-    const char *name;
-};
 
 
 
@@ -42,7 +24,6 @@ public:
     static tid_t enlistPCB(PCB *newPCB);
 private:
     static PCB *running;
-    static ffvector<PCB*>* PCBs;
 };
 
 #endif

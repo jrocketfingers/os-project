@@ -1,8 +1,32 @@
 #ifndef __PCB_H__
 #define __PCB_H__
 
-class PCB {
+#include <thread.h>
+#include <types.h>
 
-}
+class PCB {                      // Kernel's implementation of a user's thread
+public:
+    PCB(StackSize stackSize, Time timeSlice) : name(name)
+    {
+        this->name = name;
+        this->timeSlice = timeSlice;
+    }
+
+    void createStack(Thread* t, StackSize stack_size);
+    void enlist(Thread* t);
+
+    static void call(Thread* t);
+
+    unsigned int id;
+
+    word sp, ss, bp;
+    word ax, bx, cx, dx, es;
+
+    bool done;
+    Time timeSlice;
+
+    unsigned int *stack;
+    const char *name;
+};
 
 #endif
