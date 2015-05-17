@@ -3,14 +3,20 @@
 #include <kernel.h>
 #include <ffvector.h>
 
-unsigned int oldval, newval;
+class TestThread : public Thread {
+public:
+    TestThread() : Thread() { }
+
+    void run() {
+        cout << "Inside a thread.";
+    }
+};
 
 
 int userMain(int argc, char *argv[]) {
     cout << "In userMain." << endl;
 
-    _AX = 101;
-    asm int 61h;
+    TestThread t1 = TestThread();
 
     return 0;
 }

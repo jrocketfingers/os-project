@@ -1,62 +1,37 @@
+#include <iostream.h>
+#include <kernel.h>
 #include <kthread.h>
 #include <dos.h>
+#include <types.h>
 
-KThread::KThread() {
-    /* prepare the kernel thread */
-    pcb = new PCB(0);
-    pcb->stack = new unsigned[65536];
-    unsigned *kPtr = this->stack + 65536;
-    *(--kPtr) = 0x200;
-    *(--kPtr) = FP_SEG(Kernel::syscall);
-    *(--kPtr) = FP_OFF(Kernel::syscall);
+extern PCB *running;
+extern ffvector<PCB*>* PCBs;
 
-    kPtr -= 9;
+void newThread(ThreadData* data) {
+    cout << "Creating a new thread..." << endl;
 
-    pcb->sp = FP_OFF(kPtr);
-    pcb->ss = FP_SEG(this->stack);
-    pcb->bp = FP_OFF(kPtr);
+    PCB* newPCB = new PCB(data->timeSlice);
+
+    /* create a stack for the thread t
+     * thread needs to be listed because
+     * of the this pointer */
+    newPCB->createStack(data->_this, data->_run, data->stackSize);
+
+    /* enlist the thread in the available PCBs vector
+     * not all PCBs need to be enlisted - hence this isn't in the constructor.
+     * kernel PCB remains unlisted and is switched to manually */
+    data->tid = PCBs->append(newPCB);
+
+    cout << "New thread created." << endl;
 }
 
-KThread::takeOver(unsigned callID, unsigned data_seg, unsigned data_off) {
-    void *top = pcb->stack + pcb->stackSize;
-    _SP = FP_OFF(top);
-    _SS = FP_SEG(top);
-
-    asm {
-        mov ax, data_seg
-        push ax
-
-        mov ax, data_off
-        push ax
-
-
-        mov ax, callID
-        push ax
-
-
-        mov ax, seg this
-        push ax
-
-        mov ax, offset this
-        push ax
-
-
-        mov ax, seg KThread::dispatchSyscall
-        push ax
-
-        mov ax, offset KThread::dispatchSyscall
-        push ax
-
-        ret /* exit point */
-    }
-}
-
-KThread::dispatchSyscall(unsigned callID, void *data) {
+void dispatchSyscall(unsigned callID, void *data) {
+    cout << "CallID: " << callID << endl;
     switch(callID) {
         case 102:
-            KThread::newThread((ThreadData*)data);
+            newThread((ThreadData*)data);
             break;
-        case default:
+        default:
             cout << "Inconsistent syscall!";
             break;
     }
@@ -78,21 +53,44 @@ KThread::dispatchSyscall(unsigned callID, void *data) {
     }
 }
 
-KThread::newThread(ThreadData* data) {
+KThread::KThread() {
+    /* prepare the kernel thread */
+    stackSize = 4096;
+    pcb = new PCB(0);
+    pcb->stack = new unsigned[stackSize];
 
-    cout << "New thread starting. Syscall: " << kThread->ax << endl;
+    pcb->sp = FP_OFF(pcb->stack + stackSize);
+    pcb->ss = FP_SEG(pcb->stack);
+    pcb->bp = FP_OFF(pcb->stack + stackSize);
+}
 
-    PCB* newPCB = new PCB(data->timeSlice);
+void KThread::takeOver(unsigned callID, unsigned data_seg, unsigned data_off) {
+    cout << "CallID: " << callID << endl;
 
-    /* create a stack for the thread t
-     * thread needs to be listed because
-     * of the this pointer */
-    newPCB->createStack(data->_this, data->_run, data->stack_size);
+    void *top = pcb->stack + this->stackSize;
+    _SP = FP_OFF(top);
+    _SS = FP_SEG(top);
 
-    /* enlist the thread in the available PCBs vector
-     * not all PCBs need to be enlisted - hence this isn't in the constructor.
-     * kernel PCB remains unlisted and is switched to manually */
-    data->tid = PCBs->append(newPCB);
+    asm {
+        mov ax, data_seg
+        push ax
 
-    cout << "New PCB created and enlisted." << endl;
+        mov ax, data_off
+        push ax
+
+
+        mov ax, callID
+        push ax
+
+        sub sp, 4   // make empty cs and ip for (this is the previous fn on stack)
+    }
+
+    /* I do not know how to write the scope resolution operator in assembly */
+    _AX = FP_SEG(dispatchSyscall);
+    asm push ax;
+
+    _AX = FP_OFF(dispatchSyscall);
+    asm push ax;
+
+    asm ret /* exit point */
 }

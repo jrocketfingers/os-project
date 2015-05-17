@@ -6,13 +6,12 @@
 
 class PCB {                      // Kernel's implementation of a user's thread
 public:
-    PCB(Time timeSlice) : name(name)
+    PCB(Time timeSlice)
     {
-        this->name = name;
         this->timeSlice = timeSlice;
     }
 
-    void createStack(Thread* t, StackSize stack_size);
+    void createStack(void* t, void* run, StackSize stack_size);
     void enlist(Thread* t);
 
     static void call(Thread* t);
@@ -25,7 +24,6 @@ public:
     Time timeSlice;
 
     unsigned int *stack;
-    const char *name;
 };
 
 #endif

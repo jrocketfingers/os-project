@@ -23,6 +23,10 @@ protected:
     Thread (StackSize stackSize = defaultStackSize, Time timeSlice = defaultTimeSlice);
     virtual void run() {}
 
+    static void call(Thread* t) {
+        t->run();
+    }
+
     tid_t tid;
 };
 

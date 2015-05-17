@@ -114,7 +114,7 @@ void Kernel::init() {
 void Kernel::stop() {}
 
 
-void PCB::createStack(Thread* t, StackSize stackSize) {
+void PCB::createStack(void* t, void* run, StackSize stackSize) {
     unsigned *sPtr;
 
     stack = new unsigned int[stackSize];

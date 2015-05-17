@@ -1,15 +1,21 @@
 #include <types.h>
 #include <thread.h>
+#include <tdata.h>
 #include <schedule.h>
 #include <kernel.h>
 #include <util.h>
 
 Thread::Thread (StackSize stackSize, Time timeSlice) {
+    ThreadData* td = new ThreadData();
+
+    td->_this = this;
+    td->_run = call;
+    td->stackSize = stackSize;
+    td->timeSlice = timeSlice;
+
     _AX = 102;
-    _BX = FP_SEG(this);
-    _CX = FP_OFF(this);
-    _DX = stackSize;
-    _ES = timeSlice;
+    _BX = FP_SEG(td);
+    _CX = FP_OFF(td);
 
     asm int 61h;
 }
@@ -23,7 +29,7 @@ void Thread::start() {
     asm int 61h;
 }
 
-void Thread::~Thread() {}
+Thread::~Thread() {}
 
 
 void Thread::waitToComplete() {
