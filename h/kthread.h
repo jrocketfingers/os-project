@@ -7,9 +7,22 @@ void interrupt syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_d
                        unsigned p_es, unsigned p_dx, unsigned p_cx, unsigned p_bx,
                        unsigned p_ax, unsigned p_ip, unsigned p_cs, unsigned flags);
 
+struct ThreadData {
+    void *_this;
+    void *_run;
+
+    StackSize stackSize;
+    Time timeSlice;
+
+    unsigned tid;
+};
+
 class KThread {
 public:
     KThread();
+
+    void takeOver(unsigned callID, unsigned data_seg, unsigned data_off);
+    void dispatchSyscall();
 
 private:
     void syscall_dispatch();
@@ -17,6 +30,6 @@ private:
     PCB* pcb;
     unsigned callID;
     void* dataPtr;
-}
+};
 
 #endif

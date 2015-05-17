@@ -1,16 +1,28 @@
-CFLAGS = +cmpsw
-experiment.exe: kernel.obj thread.obj main.obj
-	BCC $(CFLAGS) -y -v src/experi~1.cpp output/kernel.obj output/thread.obj output/main.obj APPLICAT.LIB
-	#TLINK output/experi~1.obj output/kernel.obj
+KERNEL=kernel.exe
+ASSEMBLY=kernel.asm
+CXX=bcc
+CFLAGS=+cmpsw
 
-experiment.asm: kernel.obj
-	BCC $(CFLAGS) -S src/experi~1.cpp src/kernel.cpp
+#OBJS:= $(OBJS) output/kernel.o output/thread.o output/main.o output/experiment.o
+SRCS=src/kernel.cpp src/thread.cpp src/main.cpp src/kthread.cpp src/experi~1.cpp
+OBJS=out/kernel.obj out/thread.obj out/main.obj out/kthread.obj out/experi~1.obj
 
-main.obj: src/main.cpp
-	BCC $(CFLAGS) -c $**
+all: $(KERNEL)
 
-thread.obj: src/thread.cpp
-	BCC $(CFLAGS) -c $**
+$(KERNEL): $(OBJS)
+	$(CXX) $(CFLAGS) $(OBJS) -o kernel.exe
 
-kernel.obj: src/kernel.cpp
-	BCC $(CFLAGS) -c $**
+out/kernel.obj:
+	$(CXX) $(CFLAGS) -c src/kernel.cpp
+
+out/thread.obj:
+	$(CXX) $(CFLAGS) -c src/thread.cpp
+
+out/main.obj:
+	$(CXX) $(CFLAGS) -c src/main.cpp
+
+out/kthread.obj:
+	$(CXX) $(CFLAGS) -c src/kthread.cpp
+
+out/experi~1.obj:
+	$(CXX) $(CFLAGS) -c src/experi~1.cpp
