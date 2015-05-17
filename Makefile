@@ -1,6 +1,6 @@
 CFLAGS = +cmpsw
 experiment.exe: kernel.obj thread.obj main.obj
-	BCC $(CFLAGS) src/experi~1.cpp output/kernel.obj output/thread.obj output/main.obj APPLICAT.LIB
+	BCC $(CFLAGS) -y -v src/experi~1.cpp output/kernel.obj output/thread.obj output/main.obj APPLICAT.LIB
 	#TLINK output/experi~1.obj output/kernel.obj
 
 experiment.asm: kernel.obj

@@ -5,34 +5,12 @@
 int userMain(int argc, char* argv[]);
 
 
-class UserMainThread : public Thread {
-public:
-    UserMainThread(int argc, char* argv[]) {
-        this->argc = argc;
-        this->argv = argv;
-    }
-
-    ~UserMainThread() {
-        waitToComplete();
-    }
-
-    void run() {
-        userMain(argc, argv);
-    }
-
-private:
-    int argc;
-    char **argv;
-};
-
 int main(int argc, char* argv[]) {
     Kernel::init();
 
-    cout << "Pravi se userMain thread." << endl;
-    UserMainThread* u = new UserMainThread(argc, argv);
+    cout << "Back from kernel init in the main(); going into usermain." << endl;
 
-    cout << "Startuje se userMain thread." << endl;
-    u->start();
+    userMain(argc, argv);
 
     return 0;
 }

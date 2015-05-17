@@ -20,10 +20,9 @@ public:
     static void yield();
     static void schedule(unsigned int tid);
     static void stop();
+    static void syscall();
 
     static tid_t enlistPCB(PCB *newPCB);
-private:
-    static PCB *running;
 };
 
 #endif

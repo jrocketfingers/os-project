@@ -6,7 +6,7 @@
 
 class PCB {                      // Kernel's implementation of a user's thread
 public:
-    PCB(StackSize stackSize, Time timeSlice) : name(name)
+    PCB(Time timeSlice) : name(name)
     {
         this->name = name;
         this->timeSlice = timeSlice;
@@ -20,7 +20,6 @@ public:
     unsigned int id;
 
     word sp, ss, bp;
-    word ax, bx, cx, dx, es;
 
     bool done;
     Time timeSlice;

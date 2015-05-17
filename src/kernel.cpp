@@ -1,10 +1,12 @@
 #include <kernel.h>
 #include <pcb.h>
 #include <thread.h>
+#include <kthread.h>
 #include <schedule.h>
 #include <iostream.h>
 #include <dos.h>
 #include <vector.h>
+#include <dos.h>
 
 #define KERNEL_STACK_SIZE 1024
 
@@ -14,7 +16,7 @@
     asm push ax;
 
 /* system threads */
-PCB *kThread;
+KThread *kThread;
 PCB *running = 0;
 
 /* original timer interrupt handler */
@@ -28,23 +30,22 @@ unsigned int tick;
 word tax, tbx, tcx, tdx, tes;
 
 /* flags */
-bool change_thread_on_ctx_switch = 0;
+bool flag_change_thread_on_ctx_switch = 0;
 
 /* list of available threads */
 ffvector<PCB*>* PCBs = 0;
 
 
-void inline save_ctx() {
-    if(running) {
-        running->sp = _SP;
-        running->ss = _SS;
-        running->bp = _BP;
+void inline save_ctx(PCB* pcb) {
+    pcb->sp = _SP;
+    pcb->ss = _SS;
+    pcb->bp = _BP;
 
-        running->ax = _AX;
-        running->bx = _BX;
-        running->cx = _CX;
-        running->es = _ES;
-    }
+    pcb->ax = _AX;
+    pcb->bx = _BX;
+    pcb->cx = _CX;
+    pcb->dx = _DX;
+    pcb->es = _ES;
 }
 
 
@@ -81,7 +82,7 @@ void interrupt sys_ctx_switch() {
      * so there's no need to save the stack (kernel always starts with an empty)
      * stack. */
 
-    if(change_thread_on_ctx_switch) {
+    if(flag_change_thread_on_ctx_switch) {
         cout << "Switching the context!" << endl;
         Scheduler::put(running);
         /* run the CPU time lottery
@@ -93,7 +94,7 @@ void interrupt sys_ctx_switch() {
     }
 
     tick = running->timeSlice;
-    change_thread_on_ctx_switch = 0;
+    flag_change_thread_on_ctx_switch = 1;
 
     /* running ctx might not have been changed depending on the switch flag */
     use_ctx(running);
@@ -116,17 +117,17 @@ void interrupt systick() {
 
 
 void sys_newthread() {
-    word *tSeg = (word*)kThread->bx;
-    word *tOff = (word*)kThread->cx;
-    StackSize stack_size = kThread->dx;
-    Time timeSlice = kThread->es;
+    word *tSeg = (word*)kThread->pcb->bx;
+    word *tOff = (word*)kThread->pcb->cx;
+    StackSize stack_size = kThread->pcb->dx;
+    Time timeSlice = kThread->pcb->es;
 
     cout << "New thread starting. Syscall: " << kThread->ax << endl;
 
     /* reconstruct the thread pointer */
     Thread* t = (Thread*)MK_FP(tSeg, tOff);
 
-    PCB* newPCB = new PCB(stack_size, timeSlice);
+    PCB* newPCB = new PCB(timeSlice);
 
     /* create a stack for the thread t
      * thread needs to be listed because
@@ -151,12 +152,7 @@ void sys_schedule() {
 }
 
 
-void sys_dispatch() {
-    sys_ctx_switch();
-}
-
-
-void interrupt switch_to_syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_ds,
+void interrupt syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_ds,
                        unsigned p_es, unsigned p_dx, unsigned p_cx, unsigned p_bx,
                        unsigned p_ax, unsigned p_ip, unsigned p_cs, unsigned flags) {
 
@@ -169,88 +165,26 @@ void interrupt switch_to_syscall(unsigned p_bp, unsigned p_di, unsigned p_si, un
     kThread->dx = p_dx;
     kThread->es = p_es;
 
-    /* clean up interrupt parameters.
-     * the return sequence will be executed by sys_ctx_switch,
-     * which is a ---regular function call--- (cdecl). */
-    /* NOTE: do not mess with the bp value, as it is used to access all the
-     * interrupt parameters, they still DO exist on the running stack */
-    tax = _AX;
-    tdx = _DX;
-    tes = _ES;
-    asm {
-        /* TO DO: <<<<<<<<<<<<<<<<<<<<<<<<<<
-         * Move up CS and IP because there's the flags register just above them in
-         * an interrupt call. A normal return will clean from the register
-         * only the CS and IP, ignoring the flags, and ruining the stack! */
-        mov sp, bp      // remove the registers stack (there's an extra sp -= 10)
-        add sp, 18
-        pop dx          // take ip
-        pop es          // take cs
-        add sp, 1       // skip the flags
-
-        push es
-        push dx
-        push p_bp       // push the original bp
-    }
-    _AX = tax;
-    _DX = tdx;
-    _ES = tes;
-
     /* save stack */
-    save_ctx();
+    save_ctx(running);
 
     /* switch to kernel stack */
     use_ctx(kThread);
-
-    /* add the context switch on top of the stack */
-
-    /* use the original ax value based on bp */
-    /* stack has been changed p_ax unavailable */
-    switch(kThread->ax) {
-        case 101:
-            cout << "Dispatching." << endl;
-            asm mov ax, 0200h;
-            asm push ax;
-            PUSHF(sys_dispatch)
-            break;
-        case 102:
-            cout << "Making a new thread." << endl;
-            PUSHF(sys_ctx_resume);
-
-            /* setting up the flags */
-            asm mov ax, 0200h;
-            asm push ax;
-            /* pushing the handler */
-            PUSHF(sys_newthread)
-            break;
-        default:
-            cout << "default choice." << endl;
-            break;
-    }
-
-    asm {
-        sub sp, 18
-        mov bp, sp      // prevent from old bp overtaking sp value
-
-        /* this segment is needed cause at the end of a call there's
-         * mov sp, bp; this effectively erases local variables off the stack
-         * unless this is configured properly, the stack blows */
-        mov ax, bp
-        add ax, 22      // calculate the old bp location
-        mov [bp], ax    // set the old bp
-    }
+    cout << "Switched to kernel thread. far ptr: " << _SS << ":" << _SP << ":" << _BP << endl;
 }
 
 void Kernel::init() {
-    asm cli
+    /* prepare the initial thread information */
+    PCB* userMain = new PCB(2);
+    /* stackless thread; it uses the original stack*/
 
-    kThread = new PCB(65536, 0);
+    kThread = new KThread();
+
     PCBs = new ffvector<PCB*>(10);
+    PCBs->append(userMain);
 
-    kThread->sp = FP_OFF(kThread->stack+63999);
-    kThread->ss = FP_SEG(kThread->stack+63999);
-    kThread->bp = FP_OFF(kThread->stack+63999);
 
+    /* prepare IVT */
     asm {
         push es
         push ax
@@ -258,8 +192,8 @@ void Kernel::init() {
         mov es, ax
 
         /* put syscall at the 61h entry */
-        mov word ptr es:0184h, offset syscall
-        mov word ptr es:0186h, seg syscall
+        mov word ptr es:0184h, offset switch_to_syscall
+        mov word ptr es:0186h, seg switch_to_syscall
 
         mov ax, word ptr es:0020h
         mov oldTimerOFF, ax
@@ -279,9 +213,28 @@ void Kernel::init() {
         pop es
     }
 
-    cout << "Kernel initialization finished." << endl;
+    /* mark the userMain as the running thread */
+    running = userMain;
 
-    asm sti
+    cout << "Kernel initialization finished." << endl;
+}
+
+
+KThread::KThread() {
+    /* prepare the kernel thread */
+    pcb = new PCB(0);
+    pcb->stack = new unsigned[65536];
+    unsigned *kPtr = kThread->stack + 65536;
+    *(--kPtr) = 0x200;
+    *(--kPtr) = FP_SEG(Kernel::syscall);
+    *(--kPtr) = FP_OFF(Kernel::syscall);
+
+    kPtr -= 9;
+
+    //save_ctx(kThread);
+    pcb->sp = FP_OFF(kPtr);
+    pcb->ss = FP_SEG(kThread->stack);
+    pcb->bp = FP_OFF(kPtr);
 }
 
 
@@ -290,7 +243,19 @@ void Kernel::stop() {}
 
 void Kernel::syscall() {
     while(1) {
-
+        switch(kThread->ax) {
+            case 101:
+                cout << "Dispatching." << endl;
+            case 102:
+                cout << "Making a new thread." << endl;
+                sys_newthread();
+                flag_change_thread_on_ctx_switch = 0;
+                break;
+            default:
+                cout << "Wrong system call!" << endl;
+                flag_change_thread_on_ctx_switch = 0;
+                break;
+        }
 
         sys_ctx_switch();
     }
@@ -298,37 +263,30 @@ void Kernel::syscall() {
 
 
 void PCB::createStack(Thread* t, StackSize stackSize) {
-    int sp_i;
+    unsigned *sPtr;
 
     stack = new unsigned int[stackSize];
+    sPtr = stack + stackSize;
 
     sp = FP_OFF(stack+stackSize);
     ss = FP_SEG(stack+stackSize);
 
-    /* Knit the thread back into the kernel
-     * by placing the stop call on top of the thread*/
-    this->stack[sp_i] = FP_SEG(Kernel::stop);
-    this->stack[sp_i - 1] = FP_OFF(Kernel::stop);
+    *(--sPtr) = FP_SEG(t); // this stands as a parameter to the PCB::call
+    *(--sPtr) = FP_OFF(t);
 
-    /* Since it's as if stop has called the call,
-     * which it isn't, it was dispatched this way,
-     * we need to free up two slots for the stop's bp and ds.
-     *
-     * DANGER: - future suspect code ahead -
-     * Stop is going to use only static variables, so we can
-     * take a risk with leaving that as garbage, for now.*/
+    sPtr -= 3; // skip first call's cs, ip and bp
 
-    this->stack[sp_i - 4] = FP_SEG(t);
-    this->stack[sp_i - 5] = FP_OFF(t);
-
-    this->stack[sp_i - 6] = FP_SEG(call);
-    this->stack[sp_i - 7] = FP_OFF(call);
+    *(--sPtr) = FP_SEG(call); // add the return path from the interrupt
+    *(--sPtr) = FP_OFF(call);
 
     /* Make sure SP points to the right place */
-    sp_i -= 7;
-    this->sp = FP_OFF(this->stack + sp_i);
-    this->ss = FP_SEG(this->stack + sp_i);
-    this->bp = FP_OFF(this->stack + sp_i);
+    sPtr -= 8;
+
+    *(--sPtr) = FP_OFF(sPtr - 11);
+
+    this->sp = FP_OFF(sPtr);
+    this->ss = FP_SEG(sPtr);
+    this->bp = FP_OFF(sPtr);
 }
 
 

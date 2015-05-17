@@ -7,20 +7,10 @@ unsigned int oldval, newval;
 
 
 int userMain(int argc, char *argv[]) {
-    //Kernel::init();
-    cout << "In userMain.";
+    cout << "In userMain." << endl;
 
-    unsigned int *stack = new unsigned int[64000];
-    unsigned int sp = FP_OFF(stack+63999);
-    unsigned int ss = FP_SEG(stack+63999);
-    unsigned int *topofstack = (unsigned int*)MK_FP(ss, sp);
-
-    stack[63999] = 102;
-
-    cout << "STACK: " << stack[63999] << endl;
-    cout << "TOS: " << *topofstack << endl;
-
-    delete[] stack;
+    _AX = 101;
+    asm int 61h;
 
     return 0;
 }
