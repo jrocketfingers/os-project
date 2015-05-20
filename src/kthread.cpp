@@ -23,8 +23,9 @@ void newThread(ThreadData* data) {
      * not all PCBs need to be enlisted - hence this isn't in the constructor.
      * kernel PCB remains unlisted and is switched to manually */
     data->tid = PCBs->append(newPCB);
+    newPCB->tid = data->tid;
 
-    cout << "New thread created." << endl;
+    cout << "New thread created. TID: " << data->tid << endl;
 }
 
 void dispatch() {

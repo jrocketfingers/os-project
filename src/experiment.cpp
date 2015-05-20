@@ -8,8 +8,11 @@ public:
     TestThread() : Thread() { }
 
     void run() {
-        for(int i = 0; i < 30000; i++)
-            cout << "Inside a thread.";
+        for(unsigned long i = 0; i < 100000; i++)
+            if(i % 10000 == 0)
+                cout << "Thread: " << i << endl;
+
+        cout << "Finished thread." << endl;
     }
 };
 
@@ -18,10 +21,14 @@ public:
 int userMain(int argc, char *argv[]) {
     cout << "In userMain." << endl;
 
-    TestThread t1 = TestThread();
-    t1.start();
+    unsigned int *a = new unsigned int[128000];
+    unsigned int *b = a + 120000;
+    cout << FP_SEG(a) << "; " << FP_SEG(b) << endl;
 
-    for(int i = 0; i < 80000; i++);
+    //TestThread t1 = TestThread();
+    //t1.start();
+
+    //for(unsigned long i = 0; i < 4000000000; i++);
 
     return 0;
 }

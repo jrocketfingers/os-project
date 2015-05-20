@@ -20,6 +20,7 @@ public:
 
     bool done;
     Time timeSlice;
+    unsigned tid;
 
     unsigned int *stack;
 };
