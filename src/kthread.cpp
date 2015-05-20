@@ -27,9 +27,15 @@ void newThread(ThreadData* data) {
     cout << "New thread created." << endl;
 }
 
+
 void dispatch() {
-    Scheduler::put(running);
-    running = Scheduler::get();
+    if(!running->done)
+        Scheduler::put(running);
+
+    do {
+        running = Scheduler::get();
+    } while(running->done); /* if the newly fetched thread is marked done
+                              (terminated), pop it, and find another */
 
     tick = running->timeSlice;
 
@@ -62,6 +68,11 @@ void startThread(ThreadData *data) {
 }
 
 
+void endThread(ThreadData *data) {
+    (*PCBs)[data->tid]->done = 1;
+}
+
+
 void dispatchSyscall(unsigned callID, void *data) {
     switch(callID) {
         case SYS_dispatch:
@@ -72,6 +83,9 @@ void dispatchSyscall(unsigned callID, void *data) {
             break;
         case SYS_startthread:
             startThread((ThreadData*)data);
+            break;
+        case SYS_endthread:
+            endThread((ThreadData*)data);
             break;
         default:
             cout << "Inconsistent syscall! " << callID << endl;

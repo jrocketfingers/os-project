@@ -43,8 +43,6 @@ void interrupt systick() {
      * unlimited runtime thread */
     if(running->timeSlice) tick--;
 
-    cout << "Systick." << endl;
-
     asm int 60h; /* timer routine that we switched out */
 
     if(tick <= 0 && running->timeSlice) {

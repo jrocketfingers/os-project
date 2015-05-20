@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 #include <types.h>
+#include <syscalls.h>
+#include <tdata.h>
 
 const StackSize defaultStackSize = 4096;
 const Time defaultTimeSlice = 2;            // x 55ms
@@ -23,9 +25,7 @@ protected:
     Thread (StackSize stackSize = defaultStackSize, Time timeSlice = defaultTimeSlice);
     virtual void run() {}
 
-    static void call(Thread* t) {
-        t->run();
-    }
+    static void call(Thread* t);
 
     tid_t tid;
 };

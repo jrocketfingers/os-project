@@ -63,3 +63,18 @@ void Thread::waitToComplete() {
 void Thread::sleep(Time timeToSleep) {
 
 }
+
+void Thread::call(Thread* t) {
+    t->run();
+
+    ThreadData *td = new ThreadData();
+    td->tid = t->tid;
+
+    _AX = SYS_endthread;
+    _BX = FP_SEG(td);
+    _CX = FP_OFF(td);
+
+    asm int 61h;
+
+    delete td;
+}
