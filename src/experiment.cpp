@@ -3,16 +3,15 @@
 #include <kernel.h>
 #include <ffvector.h>
 
+int i = 0;
+
 class TestThread : public Thread {
 public:
     TestThread() : Thread() { }
 
     void run() {
-        for(unsigned long i = 0; i < 100000; i++)
-            if(i % 10000 == 0)
-                cout << "Thread: " << i << endl;
-
-        cout << "Finished thread." << endl;
+        i++;
+        cout << i << endl;
     }
 };
 
@@ -21,14 +20,12 @@ public:
 int userMain(int argc, char *argv[]) {
     cout << "In userMain." << endl;
 
-    unsigned int *a = new unsigned int[128000];
-    unsigned int *b = a + 120000;
-    cout << FP_SEG(a) << "; " << FP_SEG(b) << endl;
+    for(int th = 0; th < 100; th++) {
+        TestThread *t = new TestThread();
+        t->start();
+    }
 
-    //TestThread t1 = TestThread();
-    //t1.start();
-
-    //for(unsigned long i = 0; i < 4000000000; i++);
+    for(unsigned long i = 0; i < 4000000000; i++);
 
     return 0;
 }

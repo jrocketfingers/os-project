@@ -48,7 +48,6 @@ void interrupt systick() {
     //cout << "Tick: " << tick;
 
     if(tick <= 0 && running->timeSlice) {
-        cout << "Switching. Running tid: " << running->tid << endl;
         running->sp = _SP;
         running->ss = _SS;
 

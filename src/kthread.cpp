@@ -40,8 +40,6 @@ void dispatch() {
 
     tick = running->timeSlice;
 
-    cout << "Tick set at: " << tick << endl;
-
     _SP = running->sp;
     _SS = running->ss;
 
