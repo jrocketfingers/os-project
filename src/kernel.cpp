@@ -45,8 +45,10 @@ void interrupt systick() {
 
     asm int 60h; /* timer routine that we switched out */
 
+    //cout << "Tick: " << tick;
+
     if(tick <= 0 && running->timeSlice) {
-        cout << "Switching." << endl;
+        cout << "Switching. Running tid: " << running->tid << endl;
         running->sp = _SP;
         running->ss = _SS;
 
@@ -77,7 +79,7 @@ void Kernel::init() {
     kThread = new KThread();
 
     PCBs = new ffvector<PCB*>(10);
-    PCBs->append(userMain);
+    userMain->tid = PCBs->append(userMain);
 
     /* prepare IVT */
     asm {
@@ -110,6 +112,7 @@ void Kernel::init() {
 
     /* mark the userMain as the running thread */
     running = userMain;
+    tick = 2;
 
     cout << "Kernel initialization finished." << endl;
 }
@@ -132,14 +135,15 @@ void PCB::createStack(void* _this, void* _run, StackSize stackSize) {
 
     sPtr -= 2; // skip first call's cs and ip
 
+    *(--sPtr) = 0x200; // set the enabled interrupt flag
     *(--sPtr) = FP_SEG(_run); // add the return path from the interrupt
     *(--sPtr) = FP_OFF(_run);
 
     /* Add space for register data (is not clean!) */
     sPtr -= 9;
 
-    *(--sPtr) = FP_OFF(sPtr - 11); /* initially old BP of the interrupt call
-                                      should refer to the wrappers stack frame */
+    //*(--sPtr) = FP_OFF(sPtr - 11); [> initially old BP of the interrupt call
+                                      //should refer to the wrappers stack frame */
 
     this->sp = FP_OFF(sPtr);
     this->ss = FP_SEG(sPtr);
