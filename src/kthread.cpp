@@ -1,20 +1,22 @@
 #include <iostream.h>
-#include <kernel.h>
-#include <kthread.h>
 #include <dos.h>
+
+#include <kernel.h>
 #include <types.h>
+#include <syscalls.h>
+#include <kthread.h>
+
+#include <scheduler.h> /* dispatch */
 
 extern PCB *running;
 extern ffvector<PCB*>* PCBs;
+extern unsigned int tick;
 
 void newThread(ThreadData* data) {
     cout << "Creating a new thread..." << endl;
 
     PCB* newPCB = new PCB(data->timeSlice);
 
-    /* create a stack for the thread t
-     * thread needs to be listed because
-     * of the this pointer */
     newPCB->createStack(data->_this, data->_run, data->stackSize);
 
     /* enlist the thread in the available PCBs vector
@@ -25,14 +27,54 @@ void newThread(ThreadData* data) {
     cout << "New thread created." << endl;
 }
 
+void dispatch() {
+    Scheduler::put(running);
+    running = Scheduler::get();
+
+    tick = running->timeSlice;
+
+    cout << "Tick set at: " << tick << endl;
+
+    _SP = running->sp;
+    _SS = running->ss;
+
+
+    asm {
+        pop bp
+        pop di
+        pop si
+        pop ds
+        pop es
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+
+        iret /* exit point */
+    }
+}
+
+
+void startThread(ThreadData *data) {
+    Scheduler::put((*PCBs)[data->tid]);
+
+    cout << "Thread scheduled." << endl;
+}
+
+
 void dispatchSyscall(unsigned callID, void *data) {
-    cout << "CallID: " << callID << endl;
     switch(callID) {
-        case 102:
+        case SYS_dispatch:
+            dispatch();
+            break;
+        case SYS_newthread:
             newThread((ThreadData*)data);
             break;
+        case SYS_startthread:
+            startThread((ThreadData*)data);
+            break;
         default:
-            cout << "Inconsistent syscall!";
+            cout << "Inconsistent syscall! " << callID << endl;
             break;
     }
 
@@ -53,6 +95,7 @@ void dispatchSyscall(unsigned callID, void *data) {
     }
 }
 
+
 KThread::KThread() {
     /* prepare the kernel thread */
     stackSize = 4096;
@@ -61,36 +104,23 @@ KThread::KThread() {
 
     pcb->sp = FP_OFF(pcb->stack + stackSize);
     pcb->ss = FP_SEG(pcb->stack);
-    pcb->bp = FP_OFF(pcb->stack + stackSize);
 }
 
-void KThread::takeOver(unsigned callID, unsigned data_seg, unsigned data_off) {
-    cout << "CallID: " << callID << endl;
 
-    void *top = pcb->stack + this->stackSize;
+void KThread::takeOver(unsigned callID, unsigned data_seg, unsigned data_off) {
+    unsigned *top = pcb->stack + this->stackSize;
+
+    *(--top) = data_seg;
+    *(--top) = data_off;
+    *(--top) = callID;
+    top -= 2;
+    *(--top) = 0x200;
+    *(--top) = FP_SEG(dispatchSyscall);
+    *(--top) = FP_OFF(dispatchSyscall);
+
+
     _SP = FP_OFF(top);
     _SS = FP_SEG(top);
 
-    asm {
-        mov ax, data_seg
-        push ax
-
-        mov ax, data_off
-        push ax
-
-
-        mov ax, callID
-        push ax
-
-        sub sp, 4   // make empty cs and ip for (this is the previous fn on stack)
-    }
-
-    /* I do not know how to write the scope resolution operator in assembly */
-    _AX = FP_SEG(dispatchSyscall);
-    asm push ax;
-
-    _AX = FP_OFF(dispatchSyscall);
-    asm push ax;
-
-    asm ret /* exit point */
+    asm iret; /* exit point */
 }

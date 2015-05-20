@@ -1,1 +1,1 @@
--mh -IC:\BC31\INCLUDE;D:\H -LC:\BC31\LIB;D:\LIB -nD:\OUT
+-mh -y -v -IC:\BC31\INCLUDE;D:\H -LC:\BC31\LIB;D:\LIB -nD:\OUT

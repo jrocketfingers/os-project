@@ -1,9 +1,8 @@
 #include <types.h>
-#include <thread.h>
 #include <tdata.h>
-#include <schedule.h>
 #include <kernel.h>
-#include <util.h>
+#include <thread.h>
+#include <syscalls.h>
 
 Thread::Thread (StackSize stackSize, Time timeSlice) {
     ThreadData* td = new ThreadData();
@@ -13,20 +12,43 @@ Thread::Thread (StackSize stackSize, Time timeSlice) {
     td->stackSize = stackSize;
     td->timeSlice = timeSlice;
 
-    _AX = 102;
+    /* save used registers */
+    asm {
+        push ax
+        push bx
+        push cx
+    }
+
+    _AX = SYS_newthread;
     _BX = FP_SEG(td);
     _CX = FP_OFF(td);
 
     asm int 61h;
+
+    tid = td->tid;
+
+    delete td;
+
+    /* restore used registers */
+    asm {
+        pop cx
+        pop bx
+        pop ax
+    }
 }
 
 
 void Thread::start() {
+    ThreadData *td = new ThreadData();
+
     /* make a syscall with the schedule call (103) */
-    _AX = 103;
-    _BX = this->tid;
+    _AX = SYS_startthread;
+    _BX = FP_SEG(td);
+    _CX = FP_OFF(td);
 
     asm int 61h;
+
+    delete td;
 }
 
 Thread::~Thread() {}

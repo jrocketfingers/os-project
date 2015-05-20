@@ -1,12 +1,14 @@
-#include <kernel.h>
-#include <pcb.h>
-#include <thread.h>
-#include <kthread.h>
-#include <schedule.h>
 #include <iostream.h>
 #include <dos.h>
+
+#include <syscalls.h>
 #include <vector.h>
-#include <dos.h>
+#include <kthread.h>
+#include <thread.h>
+#include <pcb.h>
+#include <kernel.h>
+
+#include <schedule.h>
 
 #define KERNEL_STACK_SIZE 1024
 
@@ -41,13 +43,19 @@ void interrupt systick() {
      * unlimited runtime thread */
     if(running->timeSlice) tick--;
 
-    if(tick <= 0 && running->timeSlice) { /* do a context switch */ }
+    cout << "Systick." << endl;
 
-    asm int 60h;
-}
+    asm int 60h; /* timer routine that we switched out */
 
+    if(tick <= 0 && running->timeSlice) {
+        cout << "Switching." << endl;
+        running->sp = _SP;
+        running->ss = _SS;
 
-void sys_newthread() {
+        /* syscall dispatch */
+        _AX = SYS_dispatch;
+        asm int 61h;
+    }
 }
 
 
@@ -60,20 +68,18 @@ void interrupt syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_d
 
     /* switch to kernel stack */
     kThread->takeOver(p_ax, p_bx, p_cx);
-
-    cout << "Switched to a kernel thread." << endl;
 }
+
 
 void Kernel::init() {
     /* prepare the initial thread information */
-    PCB* userMain = new PCB(2);
+    PCB* userMain = new PCB(2); /* time slice = 2 */
     /* stackless thread; it uses the original stack*/
 
     kThread = new KThread();
 
     PCBs = new ffvector<PCB*>(10);
     PCBs->append(userMain);
-
 
     /* prepare IVT */
     asm {
@@ -114,7 +120,7 @@ void Kernel::init() {
 void Kernel::stop() {}
 
 
-void PCB::createStack(void* t, void* run, StackSize stackSize) {
+void PCB::createStack(void* _this, void* _run, StackSize stackSize) {
     unsigned *sPtr;
 
     stack = new unsigned int[stackSize];
@@ -123,31 +129,25 @@ void PCB::createStack(void* t, void* run, StackSize stackSize) {
     sp = FP_OFF(stack+stackSize);
     ss = FP_SEG(stack+stackSize);
 
-    *(--sPtr) = FP_SEG(t); // this stands as a parameter to the PCB::call
-    *(--sPtr) = FP_OFF(t);
+    *(--sPtr) = FP_SEG(_this); // this for the static thread call wrapper
+    *(--sPtr) = FP_OFF(_this);
 
-    sPtr -= 3; // skip first call's cs, ip and bp
+    sPtr -= 2; // skip first call's cs and ip
 
-    *(--sPtr) = FP_SEG(call); // add the return path from the interrupt
-    *(--sPtr) = FP_OFF(call);
+    *(--sPtr) = FP_SEG(_run); // add the return path from the interrupt
+    *(--sPtr) = FP_OFF(_run);
 
-    /* Make sure SP points to the right place */
-    sPtr -= 8;
+    /* Add space for register data (is not clean!) */
+    sPtr -= 9;
 
-    *(--sPtr) = FP_OFF(sPtr - 11);
+    *(--sPtr) = FP_OFF(sPtr - 11); /* initially old BP of the interrupt call
+                                      should refer to the wrappers stack frame */
 
     this->sp = FP_OFF(sPtr);
     this->ss = FP_SEG(sPtr);
-    this->bp = FP_OFF(sPtr);
 }
 
 
 void PCB::enlist(Thread* t) {
     t->tid = PCBs->append(this);
-}
-
-
-void PCB::call(Thread* t) {
-    t->run();
-    Kernel::stop();
 }

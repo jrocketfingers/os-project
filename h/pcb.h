@@ -14,11 +14,9 @@ public:
     void createStack(void* t, void* run, StackSize stack_size);
     void enlist(Thread* t);
 
-    static void call(Thread* t);
-
     unsigned int id;
 
-    word sp, ss, bp;
+    word sp, ss;
 
     bool done;
     Time timeSlice;

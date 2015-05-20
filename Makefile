@@ -10,7 +10,7 @@ OBJS=out/kernel.obj out/thread.obj out/main.obj out/kthread.obj out/experi~1.obj
 all: $(KERNEL)
 
 $(KERNEL): $(OBJS)
-	$(CXX) $(CFLAGS) $(OBJS)
+	$(CXX) $(CFLAGS) $(OBJS) lib/applicat.lib
 
 out/kernel.obj:
 	$(CXX) $(CFLAGS) -c src/kernel.cpp

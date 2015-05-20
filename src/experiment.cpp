@@ -8,15 +8,20 @@ public:
     TestThread() : Thread() { }
 
     void run() {
-        cout << "Inside a thread.";
+        for(int i = 0; i < 30000; i++)
+            cout << "Inside a thread.";
     }
 };
+
 
 
 int userMain(int argc, char *argv[]) {
     cout << "In userMain." << endl;
 
     TestThread t1 = TestThread();
+    t1.start();
+
+    for(int i = 0; i < 80000; i++);
 
     return 0;
 }

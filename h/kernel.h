@@ -9,8 +9,6 @@
 #define lock asm cli
 #define unlock asm sti
 
-
-
 class Kernel {
 public:
     static void init();
