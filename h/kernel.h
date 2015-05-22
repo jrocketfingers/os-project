@@ -3,7 +3,7 @@
 
 #include <thread.h>
 #include <dos.h>
-#include <types.h>
+#include <api/types.h>
 #include <ffvector.h>
 
 #define lock asm cli

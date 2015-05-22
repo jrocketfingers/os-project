@@ -2,7 +2,7 @@
 #define __PCB_H__
 
 #include <thread.h>
-#include <types.h>
+#include <api/types.h>
 
 class PCB {                      // Kernel's implementation of a user's thread
 public:

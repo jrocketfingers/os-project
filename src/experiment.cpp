@@ -2,6 +2,7 @@
 #include <dos.h>
 #include <kernel.h>
 #include <ffvector.h>
+#include <queue.h>
 
 int i = 0;
 
@@ -20,12 +21,21 @@ public:
 int userMain(int argc, char *argv[]) {
     cout << "In userMain." << endl;
 
-    for(int th = 0; th < 100; th++) {
-        TestThread *t = new TestThread();
-        t->start();
-    }
+    //for(int th = 0; th < 20; th++) {
+        //TestThread *t = new TestThread();
+        //t->start();
+    //}
 
-    for(unsigned long i = 0; i < 4000000000; i++);
+    //for(unsigned long i = 0; i < 4000000000; i++);
+    Queue<int> q;
+
+    q.put(10);
+    q.put(12);
+    q.put(14);
+
+    cout << q.get() << endl;
+    cout << q.get() << endl;
+    cout << q.get() << endl;
 
     return 0;
 }

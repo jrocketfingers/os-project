@@ -1,0 +1,57 @@
+Kernel modules
+==============
+    PCB - creation and maintaning of contexts
+    KThread - Kernel thread interface; wraps PCB, handles kernel takeovers
+    Kernel - interrupts, initialization, entry point
+    Syscalls - syscall handlers
+
+
+Userland modules
+================
+    Thread - user threading implementation relying on syscall api
+    API/Syscalls - public interface to syscall triggering; does primitive locking
+                   to insure thread safety during syscalls.
+
+
+PCB module
+----------
+PCB concept handles threading details on the kernel side.
+Responsible for context switching.
+End goal: All context switches are handled by the PCB itself.
+
+Modules it depends on: queue
+
+
+Kernel threads module
+---------------------
+Kernel threads handle takeovers (context switches) that result in giving the
+control back to the kernel for handling a specific task (syscall).
+Kernel thread contains it's own PCB data which handles the switch itself.
+Kernel thread is responsible for preparing the entry stack pointing to the
+syscall dispatcher.
+
+Modules it depends on: syscalls, PCB
+
+
+Kernel module
+-------------
+Set up and clean up of interrupt routines, initial userMain stack, kernel thread.
+
+Depends on other kernel modules (kthread, pcb, etc.) since it handles their
+initialization.
+
+
+Syscalls module
+---------------
+Handles all incoming system calls. It's only entry point should be ensured
+through a kernel thread. Intermediary step is the syscall interrupt which
+triggers the kernel thread takeover.
+
+Modules it depends on: kernel threads
+
+
+KThread module
+--------------
+Handles kernel thread takeovers.
+
+Depends on PCB.
