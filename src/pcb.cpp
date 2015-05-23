@@ -33,8 +33,3 @@ void PCB::createStack(void* _this, void* _run, StackSize stackSize) {
     this->sp = FP_OFF(sPtr);
     this->ss = FP_SEG(sPtr);
 }
-
-
-void PCB::enlist(Thread* t) {
-    t->tid = PCBs->append(this);
-}

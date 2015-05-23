@@ -1,5 +1,5 @@
-#ifndef __H_SEMAPHOR__
-#define __H_SEMAPHOR__
+#ifndef __H_SEMAPHORE__
+#define __H_SEMAPHORE__
 
 class Semaphore {
 public:
@@ -7,7 +7,8 @@ public:
     virtual ~Semaphore ();
     virtual void wait ();
     virtual void signal();
-    int val () const; // Returns the current value of the semaphore
+    int val () const;                                  // Returns the current
+                                                       // value of the semaphore
 private:
     unsigned int sid;
 };

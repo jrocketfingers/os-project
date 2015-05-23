@@ -6,8 +6,14 @@ enum {
     SYS_newthread           =102,
     SYS_startthread         =103,
     SYS_endthread           =104,
-    SYS_wait                =201,
-    SYS_signal              =202
+    SYS_deletethread        =105,
+    SYS_waittocomplete      =106,
+
+    SYS_newsem              =201,
+    SYS_deletesem           =202,
+    SYS_wait                =203,
+    SYS_signal              =204,
+    SYS_semval              =205
 };
 
 #endif

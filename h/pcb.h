@@ -1,26 +1,28 @@
 #ifndef __PCB_H__
 #define __PCB_H__
 
-#include <thread.h>
+/* data structures */
+#include <queue.h>
+
+/* public apis */
 #include <api/types.h>
 
 class PCB {                      // Kernel's implementation of a user's thread
 public:
-    PCB(Time timeSlice)
-    {
+    PCB(Time timeSlice) {
         this->timeSlice = timeSlice;
     }
 
     void createStack(void* t, void* run, StackSize stack_size);
-    void enlist(Thread* t);
 
-    unsigned int id;
 
     word sp, ss;
 
     bool done;
     Time timeSlice;
-    unsigned tid;
+    unsigned int id;
+
+    Queue<PCB*> waitingOn;
 
     unsigned int *stack;
 };

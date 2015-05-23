@@ -1,9 +1,11 @@
+#include <iostream.h>
+
 #include <api/types.h>
 #include <api/syscalls.h>
 #include <thread.h>
 
 Thread::Thread (StackSize stackSize, Time timeSlice) {
-    sys_newthread(this, Thread::call, stackSize, timeSlice);
+    this->tid = sys_newthread(this, Thread::call, stackSize, timeSlice);
 }
 
 
@@ -15,7 +17,7 @@ Thread::~Thread() {}
 
 
 void Thread::waitToComplete() {
-
+    sys_waittocomplete(this->tid);
 }
 
 

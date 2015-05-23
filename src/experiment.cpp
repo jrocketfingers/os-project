@@ -3,17 +3,29 @@
 #include <kernel.h>
 #include <ffvector.h>
 #include <queue.h>
+#include <semaphor.h>
+
+#define THDS 10
 
 int i = 0;
 
+Semaphore *s;
+
 class TestThread : public Thread {
 public:
-    TestThread() : Thread() { }
+    TestThread(int v) : Thread() { this->v = v; }
 
     void run() {
-        i++;
-        cout << i << endl;
+        //cout << "Waiting. " << v << endl;
+        //s->wait();
+        //cout << "Locked. " << v << ";" << endl;
+        for(unsigned long i = 0; i < 1000; i++);
+        //cout << "Finished." << v << endl;
+        //s->signal();
     }
+
+private:
+    int v;
 };
 
 
@@ -21,21 +33,19 @@ public:
 int userMain(int argc, char *argv[]) {
     cout << "In userMain." << endl;
 
-    //for(int th = 0; th < 20; th++) {
-        //TestThread *t = new TestThread();
-        //t->start();
-    //}
+    s = new Semaphore();
 
-    //for(unsigned long i = 0; i < 4000000000; i++);
-    Queue<int> q;
+    TestThread **t = new TestThread*[THDS];
+    for(int thi = 0; thi < THDS; thi++) {
+        t[thi] = new TestThread(thi);
+        cout << "Making thread " << thi << endl;
+        t[thi]->start();
+    }
 
-    q.put(10);
-    q.put(12);
-    q.put(14);
-
-    cout << q.get() << endl;
-    cout << q.get() << endl;
-    cout << q.get() << endl;
+    for(int thj = 0; thj < THDS; thj++) {
+        cout << "Waiting for: " << thj << endl;
+        t[thj]->waitToComplete();
+    }
 
     return 0;
 }

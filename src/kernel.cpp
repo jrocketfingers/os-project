@@ -7,6 +7,7 @@
 #include <thread.h>
 #include <pcb.h>
 #include <kernel.h>
+#include <kernsem.h>
 
 #include <schedule.h>
 
@@ -30,6 +31,7 @@ unsigned int tick;
 
 /* list of available threads */
 ffvector<PCB*>* PCBs = 0;
+ffvector<KernSem*>* KernSems = 0;
 
 
 void interrupt systick() {
@@ -38,8 +40,6 @@ void interrupt systick() {
     if(running->timeSlice) tick--;
 
     asm int 60h; /* timer routine that we switched out */
-
-    //cout << "Tick: " << tick;
 
     if(tick <= 0 && running->timeSlice) {
         running->sp = _SP;
@@ -72,7 +72,9 @@ void Kernel::init() {
     kThread = new KThread();
 
     PCBs = new ffvector<PCB*>(10);
-    userMain->tid = PCBs->append(userMain);
+    userMain->id = PCBs->append(userMain);
+
+    KernSems = new ffvector<KernSem*>(10);
 
     /* prepare IVT */
     asm {
