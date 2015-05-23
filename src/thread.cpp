@@ -13,11 +13,13 @@ void Thread::start() {
     sys_startthread(this->tid);
 }
 
-Thread::~Thread() {}
+Thread::~Thread() {
+    waitToComplete();
+}
 
 
 void Thread::waitToComplete() {
-    sys_waittocomplete(this->tid);
+    sys_waittocomplete(tid);
 }
 
 

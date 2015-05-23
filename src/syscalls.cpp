@@ -38,7 +38,7 @@ void dispatch() {
     } while(running->done); /* if the newly fetched thread is marked done
                               (terminated), pop it, and find another */
 
-    cout << "Switch " << running->id << endl;
+    //cout << "Switching to: " << running->id << endl;
 }
 
 
@@ -48,19 +48,32 @@ void startThread(ThreadData *data) {
 
 
 void endThread(ThreadData *data) {
-    (*PCBs)[data->tid]->done = 1;
+    PCB *threadThatIsUnblocked;
+    PCB *threadThatEnds = (*PCBs)[data->tid];
+
+    threadThatEnds->done = 1;
+
+    while(!threadThatEnds->waitingOn.empty()) {
+        threadThatIsUnblocked = threadThatEnds->waitingOn.get();
+        Scheduler::put(threadThatIsUnblocked);
+    }
 }
 
 
 void waitToComplete(ThreadData *data) {
+    cout << "Running (" << running->id << ") waiting on " << data->tid << endl;
     PCB* waitOnThread = (*PCBs)[data->tid];
+
     waitOnThread->waitingOn.put(running);
+
+    running = Scheduler::get();
 }
 
 
 void newSemaphore(int *init) {
     KernSem *sem = new KernSem(*init);
     *init = KernSems->append(sem);   // init returns the SID; ugly, but faster
+    sem->sid = *init;
 }
 
 
@@ -95,7 +108,6 @@ void semval(int *sid) {
 void dispatchSyscall(unsigned callID, void *data) {
     switch(callID) {
         case SYS_dispatch:
-            dispatch();
             break;
         case SYS_newthread:
             newThread((ThreadData*)data);

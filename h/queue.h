@@ -1,6 +1,8 @@
 #ifndef __H_QUEUE__
 #define __H_QUEUE__
 
+#include <api/types.h>
+
 template <class T>
 class Queue {
 public:
@@ -25,6 +27,10 @@ public:
         head = head->next;
 
         return ret->val;
+    }
+
+    bool empty() {
+        return head == 0;
     }
 
 private:

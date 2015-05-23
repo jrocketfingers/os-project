@@ -66,13 +66,14 @@ void interrupt syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_d
 
 void Kernel::init() {
     /* prepare the initial thread information */
-    PCB* userMain = new PCB(2); /* time slice = 2 */
+    PCB* userMain = new PCB(1000); /* time slice = 2 */
     /* stackless thread; it uses the original stack*/
 
     kThread = new KThread();
 
     PCBs = new ffvector<PCB*>(10);
     userMain->id = PCBs->append(userMain);
+    cout << "User main has ID: " << userMain->id << endl;
 
     KernSems = new ffvector<KernSem*>(10);
 

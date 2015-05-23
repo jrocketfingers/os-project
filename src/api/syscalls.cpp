@@ -68,6 +68,8 @@ void sys_endthread(unsigned tid) {
     ThreadData td;
     ThreadData *ptd = &td;
 
+    td.tid = tid;
+
     _AX = SYS_endthread;
     _BX = FP_SEG(ptd);
     _CX = FP_OFF(ptd);

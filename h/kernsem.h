@@ -11,6 +11,7 @@ public:
     void signal();
     void wait();
 
+    unsigned int sid;
     int value;
     Queue<PCB*> blocked;
 };

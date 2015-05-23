@@ -16,12 +16,12 @@ public:
     TestThread(int v) : Thread() { this->v = v; }
 
     void run() {
-        //cout << "Waiting. " << v << endl;
-        //s->wait();
-        //cout << "Locked. " << v << ";" << endl;
-        for(unsigned long i = 0; i < 1000; i++);
-        //cout << "Finished." << v << endl;
-        //s->signal();
+        cout << "Waiting. " << v << endl;
+        s->wait();
+        cout << "Locked. " << v << ";" << endl;
+        for(unsigned long i = 0; i < 1000000; i++);
+        cout << "Finished." << v << endl;
+        s->signal();
     }
 
 private:
@@ -35,17 +35,21 @@ int userMain(int argc, char *argv[]) {
 
     s = new Semaphore();
 
-    TestThread **t = new TestThread*[THDS];
-    for(int thi = 0; thi < THDS; thi++) {
-        t[thi] = new TestThread(thi);
-        cout << "Making thread " << thi << endl;
+    TestThread **t = new TestThread*[10];
+
+    for(int thi = 0; thi < 10; thi++) {
+        t[thi] = new TestThread(thi + 1);
+        cout << "Making thread " << thi + 1 << endl;
         t[thi]->start();
     }
 
-    for(int thj = 0; thj < THDS; thj++) {
+    for(int thj = 0; thj < 10; thj++) {
         cout << "Waiting for: " << thj << endl;
         t[thj]->waitToComplete();
+        cout << "Finished waiting for: " << thj << endl;
     }
+
+    cout << "User main finishes." << endl;
 
     return 0;
 }
