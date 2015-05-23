@@ -16,11 +16,14 @@ public:
     TestThread(int v) : Thread() { this->v = v; }
 
     void run() {
-        cout << "Waiting. " << v << endl;
+        //cout << "Waiting. " << v << endl;
         s->wait();
-        cout << "Locked. " << v << ";" << endl;
-        for(unsigned long i = 0; i < 1000000; i++);
-        cout << "Finished." << v << endl;
+        //cout << "Locked. " << v << ";" << endl;
+        for(unsigned long i = 0; i <= 50000; i++) {
+            //if(i % 10000 == 0)
+                //cout << v << ": " << i << endl;
+        }
+        //cout << "Finished." << v << endl;
         s->signal();
     }
 
@@ -44,9 +47,9 @@ int userMain(int argc, char *argv[]) {
     }
 
     for(int thj = 0; thj < 10; thj++) {
-        cout << "Waiting for: " << thj << endl;
-        t[thj]->waitToComplete();
-        cout << "Finished waiting for: " << thj << endl;
+        cout << "Waiting for: " << thj + 1 << endl;
+        delete t[thj];
+        cout << "Finished waiting for: " << thj + 1 << endl;
     }
 
     cout << "User main finishes." << endl;

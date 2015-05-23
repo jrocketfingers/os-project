@@ -53,6 +53,8 @@ void endThread(ThreadData *data) {
 
     threadThatEnds->done = 1;
 
+    //cout << "Thread ending " << data->tid << endl;
+
     while(!threadThatEnds->waitingOn.empty()) {
         threadThatIsUnblocked = threadThatEnds->waitingOn.get();
         Scheduler::put(threadThatIsUnblocked);
@@ -61,12 +63,15 @@ void endThread(ThreadData *data) {
 
 
 void waitToComplete(ThreadData *data) {
-    cout << "Running (" << running->id << ") waiting on " << data->tid << endl;
-    PCB* waitOnThread = (*PCBs)[data->tid];
+    //cout << "Running (" << running->id << ") waiting on " << data->tid << endl;
+    //
+    PCB* waitOnPCB = (*PCBs)[data->tid];
 
-    waitOnThread->waitingOn.put(running);
+    if(!waitOnPCB->done) {
+        waitOnPCB->waitingOn.put(running);
 
-    running = Scheduler::get();
+        running = Scheduler::get();
+    }
 }
 
 
