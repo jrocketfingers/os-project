@@ -12,11 +12,6 @@
 class Kernel {
 public:
     static void init();
-    static void waitFor(int tid);
-    static void sleep(Time time);
-    static void dispatch();
-    static void yield();
-    static void schedule(unsigned int tid);
     static void stop();
 
     static tid_t enlistPCB(PCB *newPCB);

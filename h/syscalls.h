@@ -8,6 +8,7 @@ enum {
     SYS_endthread           =104,
     SYS_deletethread        =105,
     SYS_waittocomplete      =106,
+    SYS_sleep               =107,
 
     SYS_newsem              =201,
     SYS_deletesem           =202,

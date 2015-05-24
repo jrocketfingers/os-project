@@ -54,6 +54,12 @@ int userMain(int argc, char *argv[]) {
 
     cout << "User main finishes." << endl;
 
+    cout << "User main sleeps for 100 ticks (5.5s)." << endl;
+
+    Thread::sleep(100);
+
+    cout << "User main wakes and stops." << endl;
+
     return 0;
 }
 

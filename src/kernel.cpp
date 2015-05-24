@@ -4,12 +4,15 @@
 #include <syscalls.h>
 #include <vector.h>
 #include <kthread.h>
+#include <ithread.h>
 #include <thread.h>
 #include <pcb.h>
 #include <kernel.h>
 #include <kernsem.h>
 
 #include <schedule.h>
+
+#include <sleepq.h>
 
 #define KERNEL_STACK_SIZE 1024
 
@@ -20,6 +23,7 @@
 
 /* system threads */
 KThread *kThread;
+IThread *iThread;
 PCB *running = 0;
 
 /* original timer interrupt handler */
@@ -29,21 +33,37 @@ unsigned int oldTimerOFF;
 /* ticker */
 unsigned int tick;
 
+/* sleeping queue */
+SleepQ sleeping;
+
 /* list of available threads */
 ffvector<PCB*>* PCBs = 0;
 ffvector<KernSem*>* KernSems = 0;
 
+/* kernel mode running */
+bool kernel_mode = 0;
+bool idling = 0;
 
 void interrupt systick() {
     /* do not tick if the time slice is set to 0
      * unlimited runtime thread */
-    if(running->timeSlice) tick--;
+    if(tick > 0 && running->timeSlice && !kernel_mode) tick--;
 
     asm int 60h; /* timer routine that we switched out */
 
-    if(tick <= 0 && running->timeSlice) {
-        running->sp = _SP;
-        running->ss = _SS;
+    sleeping.tick();
+
+    /* tick must not be under 0, since it's marked unsigned */
+    if(tick == 0 && running->timeSlice && !kernel_mode) {
+        if(!idling) {
+            running->sp = _SP;
+            running->ss = _SS;
+        } else {
+            iThread->pcb->sp = _SP;
+            iThread->pcb->ss = _SS;
+
+            idling = 0;
+        }
 
         /* syscall dispatch */
         _AX = SYS_dispatch;
@@ -70,6 +90,7 @@ void Kernel::init() {
     /* stackless thread; it uses the original stack*/
 
     kThread = new KThread();
+    iThread = new IThread();
 
     PCBs = new ffvector<PCB*>(10);
     userMain->id = PCBs->append(userMain);

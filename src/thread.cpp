@@ -25,7 +25,7 @@ void Thread::waitToComplete() {
 
 /* Static method */
 void Thread::sleep(Time timeToSleep) {
-
+    sys_sleep(timeToSleep);
 }
 
 void Thread::call(Thread* t) {

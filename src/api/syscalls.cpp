@@ -90,6 +90,19 @@ void sys_waittocomplete(unsigned tid) {
     asm int 61h;
 }
 
+void sys_sleep(Time time) {
+    ThreadData td;
+    ThreadData *ptd = &td;
+
+    td.timeSlice = time;
+
+    _AX = SYS_sleep;
+    _BX = FP_SEG(ptd);
+    _CX = FP_OFF(ptd);
+
+    asm int 61h;
+}
+
 int sys_newsem(int init) {
     int* data = &init;
 

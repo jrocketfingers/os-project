@@ -2,7 +2,7 @@
 #include <iostream.h>
 #include <dos.h>
 
-/* dependincies */
+/* dependencies */
 #include <pcb.h>            /* handles PCBs */
 #include <ffvector.h>       /* handles PCB storing */
 #include <tdata.h>          /* thread transient data */
@@ -10,11 +10,21 @@
 #include <syscalls.h>       /* enumerated list of syscalls */
 #include <scheduler.h>      /* scheduler implementation */
 #include <kernsem.h>        /* handles kernel */
+#include <sleepq.h>
+#include <ithread.h>
 
+
+/* kerenl.cpp */
 extern PCB *running;
 extern ffvector<PCB*>* PCBs;
 extern ffvector<KernSem*>* KernSems;
 extern unsigned int tick;
+extern SleepQ sleeping;
+extern IThread *iThread;
+extern bool kernel_mode;
+
+
+bool dont_schedule = 0;
 
 void newThread(ThreadData* data) {
     PCB* newPCB = new PCB(data->timeSlice);
@@ -30,15 +40,19 @@ void newThread(ThreadData* data) {
 
 
 void dispatch() {
-    if(!running->done)
+    if(!running->done && dont_schedule == 0)
         Scheduler::put(running);
 
     do {
         running = Scheduler::get();
+        if(!running) break; /* if there's nothing to schedule */
     } while(running->done); /* if the newly fetched thread is marked done
                               (terminated), pop it, and find another */
 
-    //cout << "Switching to: " << running->id << endl;
+    if(running != 0)
+        cout << "Switching to: " << running->id << endl;
+
+    dont_schedule = 0;
 }
 
 
@@ -70,8 +84,16 @@ void waitToComplete(ThreadData *data) {
     if(!waitOnPCB->done) {
         waitOnPCB->waitingOn.put(running);
 
-        running = Scheduler::get();
+        dont_schedule = 1;
     }
+}
+
+
+void sleep(ThreadData *data) {
+    cout << "Sleeping " << running->id << endl;
+    sleeping.put(running, data->timeSlice); /* time slice - sleeping time */
+
+    dont_schedule = 1; /* do not put the PCB back into scheduler, flag */
 }
 
 
@@ -125,6 +147,10 @@ void dispatchSyscall(unsigned callID, void *data) {
             break;
         case SYS_waittocomplete:
             waitToComplete((ThreadData*)data);
+            break;
+        case SYS_sleep:
+            sleep((ThreadData*)data);
+            break;
 
         case SYS_newsem:
             newSemaphore((int*)data);
@@ -148,11 +174,18 @@ void dispatchSyscall(unsigned callID, void *data) {
 
     dispatch(); /* change the active running */
 
-    tick = running->timeSlice;
+    if(running != 0) { /* non-sleeping dispatched thread exists */
+        tick = running->timeSlice;
 
-    _SP = running->sp;
-    _SS = running->ss;
+        _SP = running->sp;
+        _SS = running->ss;
+    } else {
+        iThread->takeOver(); /* exit point */
+    }
 
+    /* this piece of code happens only when switching to regular pcbs */
+
+    kernel_mode = 0; /* mark the fact that we can switch from now on */
 
     asm {
         pop bp

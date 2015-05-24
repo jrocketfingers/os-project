@@ -7,9 +7,11 @@
 
 #include <scheduler.h> /* dispatch needs it */
 
-
 /* syscalls.cpp */
 void dispatchSyscall(unsigned callID, void *data);
+
+/* kernel.cpp */
+extern bool kernel_mode;
 
 
 KThread::KThread() {
@@ -24,6 +26,8 @@ KThread::KThread() {
 
 
 void KThread::takeOver(unsigned callID, unsigned data_seg, unsigned data_off) {
+    kernel_mode = 1;
+
     unsigned *top = pcb->stack + this->stackSize;
 
     *(--top) = data_seg;
