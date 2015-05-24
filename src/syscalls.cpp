@@ -49,8 +49,8 @@ void dispatch() {
     } while(running->done); /* if the newly fetched thread is marked done
                               (terminated), pop it, and find another */
 
-    if(running != 0)
-        cout << "Switching to: " << running->id << endl;
+    //if(running != 0)
+        //cout << "Switching to: " << running->id << endl;
 
     dont_schedule = 0;
 }

@@ -92,7 +92,7 @@ void Kernel::init() {
     kThread = new KThread();
     iThread = new IThread();
 
-    PCBs = new ffvector<PCB*>(10);
+    PCBs = new ffvector<PCB*>(3126);
     userMain->id = PCBs->append(userMain);
     cout << "User main has ID: " << userMain->id << endl;
 

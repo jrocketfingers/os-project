@@ -24,9 +24,7 @@ void KernSem::signal() {
 }
 
 void KernSem::wait() {
-    cout << "Running thread " << running->id << " trying to wait on SID: " << sid << endl;
     if(--value < 0) {
-        cout << "Running thread " << running->id << " blocked on SID: " << sid << endl;
         blocked.put(running);
         running = Scheduler::get(); /* just a fake get - puts back a valid value */
     }
