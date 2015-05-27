@@ -103,7 +103,7 @@ void sys_sleep(Time time) {
     asm int 61h;
 }
 
-int sys_newsem(int init) {
+unsigned sys_newsem(int init) {
     int* data = &init;
 
     _AX = SYS_newsem;
@@ -115,8 +115,8 @@ int sys_newsem(int init) {
     return init;        /* SID of the new semaphore */
 }
 
-void sys_deletesem(int sid) {
-    int* data = &sid;
+void sys_deletesem(unsigned sid) {
+    unsigned* data = &sid;
 
     _AX = SYS_deletesem;
     _BX = FP_SEG(data);
@@ -125,28 +125,28 @@ void sys_deletesem(int sid) {
     asm int 61h;
 }
 
-void sys_signal(int sid) {
-    int* data = &sid;
+void sys_sigsem(unsigned sid) {
+    unsigned* data = &sid;
 
-    _AX = SYS_signal;
+    _AX = SYS_sigsem;
     _BX = FP_SEG(data);
     _CX = FP_OFF(data);
 
     asm int 61h;
 }
 
-void sys_wait(int sid) {
-    int* data = &sid;
+void sys_waitsem(unsigned sid) {
+    unsigned* data = &sid;
 
-    _AX = SYS_wait;
+    _AX = SYS_waitsem;
     _BX = FP_SEG(data);
     _CX = FP_OFF(data);
 
     asm int 61h;
 }
 
-int sys_semval(int sid) {
-    int* data = &sid;
+int sys_semval(unsigned sid) {
+    unsigned* data = &sid;
     _AX = SYS_semval;
     _BX = FP_SEG(data);
     _CX = FP_OFF(data);
@@ -154,4 +154,46 @@ int sys_semval(int sid) {
     asm int 61h;
 
     return sid;         // SID now contains semaphore value
+}
+
+unsigned sys_newev(unsigned ivtNo) {
+    unsigned* data = &ivtNo;
+
+    _AX = SYS_newevent;
+    _BX = FP_SEG(data);
+    _CX = FP_OFF(data);
+
+    asm int 61h;
+
+    return ivtNo;        /* EID of the new event */
+}
+
+void sys_deleteev(unsigned eid) {
+    unsigned* data = &eid;
+
+    _AX = SYS_deleteevent;
+    _BX = FP_SEG(data);
+    _CX = FP_OFF(data);
+
+    asm int 61h;
+}
+
+void sys_sigev(unsigned eid) {
+    unsigned* data = &eid;
+
+    _AX = SYS_sigev;
+    _BX = FP_SEG(data);
+    _CX = FP_OFF(data);
+
+    asm int 61h;
+}
+
+void sys_waitev(unsigned eid) {
+    unsigned* data = &eid;
+
+    _AX = SYS_waitev;
+    _BX = FP_SEG(data);
+    _CX = FP_OFF(data);
+
+    asm int 61h;
 }

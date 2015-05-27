@@ -4,11 +4,15 @@
 #include <kernsem.h>
 #include <pcb.h>
 
+/* kernel.cpp */
 extern PCB* running;
+extern char dont_schedule;
+
 
 KernSem::KernSem(int val) {
     this->value = val;
 }
+
 
 KernSem::~KernSem() {
     PCB* pcb;
@@ -17,15 +21,17 @@ KernSem::~KernSem() {
     }
 }
 
+
 void KernSem::signal() {
     if(value++ < 0) {
         Scheduler::put(blocked.get());
     }
 }
 
+
 void KernSem::wait() {
     if(--value < 0) {
         blocked.put(running);
-        running = Scheduler::get(); /* just a fake get - puts back a valid value */
+        dont_schedule = 1;
     }
 }

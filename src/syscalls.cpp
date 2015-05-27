@@ -10,6 +10,7 @@
 #include <syscalls.h>       /* enumerated list of syscalls */
 #include <scheduler.h>      /* scheduler implementation */
 #include <kernsem.h>        /* handles kernel */
+#include <kernev.h>
 #include <sleepq.h>
 #include <ithread.h>
 
@@ -18,13 +19,14 @@
 extern PCB *running;
 extern ffvector<PCB*>* PCBs;
 extern ffvector<KernSem*>* KernSems;
+extern ffvector<KernEv*>* KernEvs;
 extern unsigned int tick;
 extern SleepQ sleeping;
 extern IThread *iThread;
 extern bool kernel_mode;
 
-
 bool dont_schedule = 0;
+
 
 void newThread(ThreadData* data) {
     PCB* newPCB = new PCB(data->timeSlice);
@@ -40,6 +42,8 @@ void newThread(ThreadData* data) {
 
 
 void dispatch() {
+    //cout << "Switching from: " << running->id << endl;
+
     if(!running->done && dont_schedule == 0)
         Scheduler::put(running);
 
@@ -90,7 +94,6 @@ void waitToComplete(ThreadData *data) {
 
 
 void sleep(ThreadData *data) {
-    cout << "Sleeping " << running->id << endl;
     sleeping.put(running, data->timeSlice); /* time slice - sleeping time */
 
     dont_schedule = 1; /* do not put the PCB back into scheduler, flag */
@@ -104,7 +107,7 @@ void newSemaphore(int *init) {
 }
 
 
-void deleteSemaphore(int *sid) {
+void deleteSemaphore(unsigned *sid) {
     KernSem *sem = (*KernSems)[*sid];
     PCB *pcb;
 
@@ -117,22 +120,55 @@ void deleteSemaphore(int *sid) {
 }
 
 
-void wait(int *sid) {
+void waitSem(unsigned *sid) {
     (*KernSems)[*sid]->wait();
 }
 
 
-void signal(int *sid) {
+void sigSem(unsigned *sid) {
     (*KernSems)[*sid]->signal();
 }
 
 
-void semval(int *sid) {
+void semVal(int *sid) {
     *sid = (*KernSems)[*sid]->value;
 }
 
 
+void newEvent(unsigned *eid) {
+    KernEv *ev = new KernEv(IVTNo ivtNo);
+    *eid = KernEvs->append(ev);
+    ev->eid = *eid;
+}
+
+
+void waitEv(unsigned *eid) {
+    (*KernEvs)[*eid]->wait();
+}
+
+
+void sigEv(unsigned *eid) {
+    (*KernEvs)[*eid]->signal();
+}
+
+
+void deleteEvent(unsigned *eid) {
+    KernEv *ev = (*KernEvs)[*eid];
+    PCB *pcb = ev->creator;
+
+    /* this ought not be necessary, only the creator should be doing the
+     * destruction. is there any other scenario? */
+    //if(ev->val < 0)
+        //Scheduler::put(pcb);
+
+    KernEvs->remove(*eid);
+
+    delete ev;
+}
+
+
 void dispatchSyscall(unsigned callID, void *data) {
+    //cout << "CallID: " << callID << endl;
     switch(callID) {
         case SYS_dispatch:
             break;
@@ -156,16 +192,29 @@ void dispatchSyscall(unsigned callID, void *data) {
             newSemaphore((int*)data);
             break;
         case SYS_deletesem:
-            deleteSemaphore((int*)data);
+            deleteSemaphore((unsigned*)data);
             break;
-        case SYS_signal:
-            signal((int*)data);
+        case SYS_sigsem:
+            sigSem((unsigned*)data);
             break;
-        case SYS_wait:
-            wait((int*)data);
+        case SYS_waitsem:
+            waitSem((unsigned*)data);
             break;
         case SYS_semval:
-            semval((int*)data);
+            semVal((int*)data);
+            break;
+
+        case SYS_newevent:
+            newEvent((unsigned*)data);
+            break;
+        case SYS_sigev:
+            sigEv((unsigned*)data);
+            break;
+        case SYS_waitev:
+            waitEv((unsigned*)data);
+            break;
+        case SYS_deleteevent:
+            deleteEvent((unsigned*)data);
             break;
         default:
             cout << "Inconsistent syscall! " << callID << endl;

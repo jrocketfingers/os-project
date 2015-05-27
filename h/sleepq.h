@@ -2,10 +2,10 @@
 #define __H_SLEEPQ__
 
 #include <api/types.h>
-#include <scheduler.h>
+#include <schedule.h>
 
 /* debugging purposes */
-#include <iostream.h>
+//#include <iostream.h>
 
 class SleepQ {
 public:

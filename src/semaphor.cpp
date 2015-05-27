@@ -13,11 +13,11 @@ Semaphore::~Semaphore() {
 }
 
 void Semaphore::signal() {
-    sys_signal(sid);
+    sys_sigsem(sid);
 }
 
 void Semaphore::wait() {
-    sys_wait(sid);
+    sys_waitsem(sid);
 }
 
 int Semaphore::val() const {

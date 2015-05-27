@@ -12,9 +12,14 @@ enum {
 
     SYS_newsem              =201,
     SYS_deletesem           =202,
-    SYS_wait                =203,
-    SYS_signal              =204,
-    SYS_semval              =205
+    SYS_waitsem             =203,
+    SYS_sigsem              =204,
+    SYS_semval              =205,
+
+    SYS_newevent            =301,
+    SYS_sigev               =302,
+    SYS_waitev              =303,
+    SYS_deleteevent         =304
 };
 
 #endif

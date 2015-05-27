@@ -9,10 +9,15 @@ void sys_endthread(unsigned tid);
 void sys_waittocomplete(unsigned tid);
 void sys_sleep(Time time);
 
-int sys_newsem(int init);
-void sys_deletesem(int sid);
-void sys_wait(int sid);
-void sys_signal(int sid);
-int sys_semval(int sid);
+unsigned sys_newsem(int init);
+void sys_deletesem(unsigned sid);
+void sys_waitsem(unsigned sid);
+void sys_sigsem(unsigned sid);
+int sys_semval(unsigned sid);
+
+unsigned sys_newev(IVTNo ivtNo);
+void sys_deleteev(unsigned eid);
+void sys_waitev(unsigned eid);
+void sys_sigev(unsigned eid);
 
 #endif

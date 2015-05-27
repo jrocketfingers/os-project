@@ -92,8 +92,9 @@ void Kernel::init() {
     kThread = new KThread();
     iThread = new IThread();
 
-    PCBs = new ffvector<PCB*>(3126);
-    userMain->id = PCBs->append(userMain);
+    /* make an available PCB listing, and add userMain */
+    PCBs            = new ffvector<PCB*>(3126);
+    userMain->id    = PCBs->append(userMain);
     cout << "User main has ID: " << userMain->id << endl;
 
     KernSems = new ffvector<KernSem*>(10);
@@ -129,7 +130,7 @@ void Kernel::init() {
 
     /* mark the userMain as the running thread */
     running = userMain;
-    tick = 2;
+    tick    = 2;
 
     cout << "Kernel initialization finished." << endl;
 }

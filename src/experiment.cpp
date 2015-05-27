@@ -1,11 +1,12 @@
 #include <iostream.h>
 #include <dos.h>
+
 #include <kernel.h>
 #include <ffvector.h>
 #include <queue.h>
 #include <semaphor.h>
 
-#define THDS 200
+#define THDS 10
 
 int i = 0;
 
@@ -13,19 +14,19 @@ Semaphore *s;
 
 class TestThread : public Thread {
 public:
-    TestThread(int v) : Thread(64) { this->v = v; }
+    TestThread(int v) : Thread(32) { this->v = v; }
 
     void run() {
-        //cout << "Waiting. " << v << endl;
-        //s->wait();
-        //cout << "Locked. " << v << ";" << endl;
-        for(unsigned long i = 0; i <= 50000; i++) {
+        cout << "Waiting. " << v << endl;
+        s->wait();
+        cout << "Locked. " << v << ";" << endl;
+        //for(unsigned long i = 0; i <= 2000000; i++) {
             //if(i % 10000 == 0)
                 //cout << v << ": " << i << endl;
-        }
-        Thread::sleep(100);
-        //cout << "Finished." << v << endl;
-        //s->signal();
+        //}
+        Thread::sleep(20);
+        cout << "Finished." << v << endl;
+        s->signal();
     }
 
 private:
@@ -42,9 +43,13 @@ int userMain(int argc, char *argv[]) {
 
     for(int thi = 0; thi < THDS; thi++) {
         t[thi] = new TestThread(thi + 1);
+
         cout << "Making thread " << thi + 1 << endl;
         t[thi]->start();
     }
+
+    //for(int thk = 0; thk < THDS; thk++) {
+    //}
 
     for(int thj = 0; thj < THDS; thj++) {
         cout << "Waiting for: " << thj + 1 << endl;
