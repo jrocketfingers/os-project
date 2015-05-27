@@ -1,3 +1,5 @@
 docs/
 test/
 output/*
+.tmp/
+out/
