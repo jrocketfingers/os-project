@@ -1,8 +1,8 @@
-#include <iostream.h> /* debugging purposes */
-
 #include <scheduler.h>
 #include <kernsem.h>
 #include <pcb.h>
+
+#include <debug.h>
 
 /* kernel.cpp */
 extern PCB* running;
@@ -18,20 +18,32 @@ KernSem::~KernSem() {
     PCB* pcb;
     while(pcb = blocked.get()) {
         Scheduler::put(pcb);
+        pcb->unblock();
     }
 }
 
 
 void KernSem::signal() {
     if(value++ < 0) {
-        Scheduler::put(blocked.get());
+        PCB* pcb;
+        pcb = blocked.get();
+        Scheduler::put(pcb);
+        pcb->unblock();
     }
+
+#ifdef DEBUG__SEMAPHORES
+    cout << "[" << sid << "] Semaphore value after signal: " << value << endl;
+#endif
 }
 
 
 void KernSem::wait() {
     if(--value < 0) {
         blocked.put(running);
-        dont_schedule = 1;
+        running->block();
     }
+
+#ifdef DEBUG__SEMAPHORES
+    cout << "[" << sid << "] Semaphore value after wait: " << value << endl;
+#endif
 }

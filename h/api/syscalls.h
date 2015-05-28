@@ -20,4 +20,6 @@ void sys_deleteev(unsigned eid);
 void sys_waitev(unsigned eid);
 void sys_sigev(unsigned eid);
 
+void dispatch();
+
 #endif

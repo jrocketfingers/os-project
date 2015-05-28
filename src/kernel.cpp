@@ -1,6 +1,6 @@
-#include <iostream.h>
 #include <dos.h>
 
+#include <api/syscalls.h>
 #include <syscalls.h>
 #include <vector.h>
 #include <kthread.h>
@@ -10,10 +10,10 @@
 #include <kernel.h>
 #include <kernsem.h>
 #include <kernev.h>
-
 #include <schedule.h>
-
 #include <sleepq.h>
+
+#include <debug.h>
 
 #define KERNEL_STACK_SIZE 1024
 
@@ -45,6 +45,7 @@ ffvector<KernEv*>* KernEvs = 0;
 /* kernel mode running */
 bool kernel_mode = 0;
 bool idling = 0;
+bool wakeup;
 
 void interrupt systick() {
     /* do not tick if the time slice is set to 0
@@ -56,21 +57,20 @@ void interrupt systick() {
     sleeping.tick();
 
     /* tick must not be under 0, since it's marked unsigned */
-    if(tick == 0 && running->timeSlice && !kernel_mode) {
-        if(!idling) {
-            running->sp = _SP;
-            running->ss = _SS;
-        } else {
-            iThread->pcb->sp = _SP;
-            iThread->pcb->ss = _SS;
-
-            idling = 0;
-        }
-
-        /* syscall dispatch */
-        _AX = SYS_dispatch;
-        asm int 61h;
+    if(Kernel::state == STATE_working && tick == 0 && running->timeSlice && !kernel_mode) {
+        running->sp = _SP;
+        running->ss = _SS;
     }
+    else if(Kernel::state == STATE_wakeup) {
+        iThread->pcb->sp = _SP;
+        iThread->pcb->ss = _SS;
+
+        Kernel::work();
+    }
+
+    /* syscall dispatch */
+    if(Kernel::state == STATE_working)
+        dispatch();
 }
 
 
@@ -97,7 +97,10 @@ void Kernel::init() {
     /* make an available PCB listing, and add userMain */
     PCBs            = new ffvector<PCB*>(3126);
     userMain->id    = PCBs->append(userMain);
+
+#ifdef DEBUG
     cout << "User main has ID: " << userMain->id << endl;
+#endif
 
     KernSems = new ffvector<KernSem*>(10);
 
@@ -132,9 +135,13 @@ void Kernel::init() {
 
     /* mark the userMain as the running thread */
     running = userMain;
+    running->state = STATE_running; /* manually sets usermain as the running thread */
+    Kernel::state = STATE_working;
     tick    = 2;
 
+#ifdef DEBUG
     cout << "Kernel initialization finished." << endl;
+#endif
 }
 
 

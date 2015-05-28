@@ -197,3 +197,9 @@ void sys_waitev(unsigned eid) {
 
     asm int 61h;
 }
+
+void dispatch() {
+    _AX = SYS_dispatch;
+
+    asm int 61h;
+}

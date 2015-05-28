@@ -7,18 +7,46 @@
 /* public apis */
 #include <api/types.h>
 
+enum PCBState {
+    STATE_new           =1,
+    STATE_ready,
+    STATE_running,
+    STATE_stopped,
+    STATE_blocked,
+    STATE_interrupted
+};
+
+const char PCBStateName[][30] = {
+    "new",
+    "ready",
+    "running",
+    "stopped",
+    "blocked",
+    "interrupted"
+};
+
 class PCB {                      // Kernel's implementation of a user's thread
 public:
     PCB(Time timeSlice) {
         this->timeSlice = timeSlice;
+        this->state = STATE_new;
     }
 
     void createStack(void* t, void* run, StackSize stack_size);
+    void deleteStack();
 
+    void start();
+    void stop();
+    void block();
+    void unblock();
+
+    void schedule();
+    void dispatch();
 
     word sp, ss;
 
-    bool done;
+    PCBState state;
+
     Time timeSlice;
     unsigned int id;
 

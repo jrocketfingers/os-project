@@ -1,5 +1,4 @@
 /* default includes */
-#include <iostream.h>
 #include <dos.h>
 
 /* dependencies */
@@ -9,11 +8,14 @@
 #include <sdata.h>          /* semaphore transient data */
 #include <syscalls.h>       /* enumerated list of syscalls */
 #include <scheduler.h>      /* scheduler implementation */
-#include <kernsem.h>        /* handles kernel */
+#include <kernsem.h>        /* handles kernel semaphores */
+#include <kernel.h>
 #include <ivtentry.h>
 #include <kernev.h>
 #include <sleepq.h>
 #include <ithread.h>
+
+#include <debug.h>
 
 
 /* kerenl.cpp */
@@ -26,8 +28,7 @@ extern SleepQ sleeping;
 extern IThread *iThread;
 extern bool kernel_mode;
 
-bool dont_schedule = 0;
-
+KernelState Kernel::state = 0;
 
 void newThread(ThreadData* data) {
     PCB* newPCB = new PCB(data->timeSlice);
@@ -42,27 +43,46 @@ void newThread(ThreadData* data) {
 }
 
 
-void dispatch() {
-    //cout << "Switching from: " << running->id << endl;
+/* it should be named dispatch, but the specification requires the syscall
+ * wrapper to be named dispatch() */
+void _dispatch() {
+#ifdef DEBUG__THREADS
+    cout << "Switching from: " << running->id << endl;
+#endif
 
-    if(!running->done && dont_schedule == 0)
+    if(running->state == STATE_running) {
+        /* the scheduler code can be moved to the PCB, consider that */
+        /* argument against the idea - PCB should be decoupled from the kernel
+         * implementation? */
+
+#ifdef DEBUG__THREADS
+        cout << "Putting thread ID: " << running->id << endl;
+#endif
+
         Scheduler::put(running);
+        running->schedule(); /* adjust the state accordingly */
+    }
 
     do {
         running = Scheduler::get();
-        if(!running) break; /* if there's nothing to schedule */
-    } while(running->done); /* if the newly fetched thread is marked done
-                              (terminated), pop it, and find another */
+        if(running == 0) break; /* if there's nothing to schedule */
+    } while(running->state == STATE_stopped); /* if the newly fetched thread is marked stopped
+                                                (terminated), pop it, and find another */
 
-    //if(running != 0)
-        //cout << "Switching to: " << running->id << endl;
+    if(running) {
+        running->dispatch();
 
-    dont_schedule = 0;
+#ifdef DEBUG__THREADS
+        cout << "Getting thread: " << running->id << endl;
+#endif
+    }
 }
 
 
 void startThread(ThreadData *data) {
-    Scheduler::put((*PCBs)[data->tid]);
+    PCB* pcb = (*PCBs)[data->tid];
+    Scheduler::put(pcb);
+    pcb->start(); /* mark the state as STATE_running */
 }
 
 
@@ -70,34 +90,38 @@ void endThread(ThreadData *data) {
     PCB *threadThatIsUnblocked;
     PCB *threadThatEnds = (*PCBs)[data->tid];
 
-    threadThatEnds->done = 1;
+    threadThatEnds->stop();
 
+#ifdef DEBUG__THREADS
     cout << "Thread ending " << data->tid << endl;
+#endif
 
     while(!threadThatEnds->waitingOn.empty()) {
         threadThatIsUnblocked = threadThatEnds->waitingOn.get();
         Scheduler::put(threadThatIsUnblocked);
+        threadThatIsUnblocked->unblock();
     }
 }
 
 
 void waitToComplete(ThreadData *data) {
-    //cout << "Running (" << running->id << ") waiting on " << data->tid << endl;
-    //
     PCB* waitOnPCB = (*PCBs)[data->tid];
 
-    if(!waitOnPCB->done) {
+    if(waitOnPCB->state != STATE_stopped) {
         waitOnPCB->waitingOn.put(running);
+        running->block();
+#ifdef DEBUG__THREADS
+        cout << "Joining with thread [" << waitOnPCB->id << "]" << endl;
+    } else {
 
-        dont_schedule = 1;
+        cout << "Thread already finished. [" << waitOnPCB->id << "] Not blocking." << endl;
+#endif /* smooth - will shoot you in the foot if you touch it */
     }
 }
 
 
 void sleep(ThreadData *data) {
     sleeping.put(running, data->timeSlice); /* time slice - sleeping time */
-
-    dont_schedule = 1; /* do not put the PCB back into scheduler, flag */
 }
 
 
@@ -105,6 +129,10 @@ void newSemaphore(int *init) {
     KernSem *sem = new KernSem(*init);
     *init = KernSems->append(sem);   // init returns the SID; ugly, but faster
     sem->sid = *init;
+
+#ifdef DEBUG__SEMAPHORES
+    cout << "[" << sem->sid << "] Semaphore initial value: " << sem->value << endl;
+#endif
 }
 
 
@@ -172,7 +200,9 @@ void deleteEvent(unsigned *eid) {
 
 
 void dispatchSyscall(unsigned callID, void *data) {
-    //cout << "CallID: " << callID << endl;
+#ifdef DEBUG__VERBOSE
+    cout << "Call: " << callNames[callID] << endl;
+#endif
     switch(callID) {
         case SYS_dispatch:
             break;
@@ -221,11 +251,13 @@ void dispatchSyscall(unsigned callID, void *data) {
             deleteEvent((unsigned*)data);
             break;
         default:
+#ifdef DEBUG__VERBOSE
             cout << "Inconsistent syscall! " << callID << endl;
+#endif
             break;
     }
 
-    dispatch(); /* change the active running */
+    _dispatch(); /* change the active running */
 
     if(running != 0) { /* non-sleeping dispatched thread exists */
         tick = running->timeSlice;
@@ -233,7 +265,7 @@ void dispatchSyscall(unsigned callID, void *data) {
         _SP = running->sp;
         _SS = running->ss;
     } else {
-        cout << "Idling...";
+        Kernel::idle();
         iThread->takeOver(); /* exit point */
     }
 

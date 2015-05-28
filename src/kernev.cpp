@@ -1,8 +1,7 @@
-/* system libraries */
-#include <iostream.h>
-
 #include <kernev.h>
 #include <schedule.h>
+
+#include <debug.h>
 
 /* kernel.cpp */
 extern PCB* running;
@@ -26,7 +25,8 @@ void KernEv::signal() {
 
     /* unblocking case */
     if(val >= 0) {
-        Scheduler::put(this->creator);
+        Scheduler::put(creator);
+        creator->unblock();
     }
 }
 
@@ -35,9 +35,11 @@ void KernEv::wait() {
 
     /* blocking case */
     if(val < 0)
-        dont_schedule = 1;
+        creator->block();
 
+#ifdef DEBUG__EVENTS
     /* diagnostics */
     if(val < -1)
         cout << "Event has waited more than once, error!" << endl;
+#endif
 }

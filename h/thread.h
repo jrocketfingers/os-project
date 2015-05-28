@@ -2,10 +2,10 @@
 #define __THREAD_H__
 
 #include <stddef.h>
-#include <syscalls.h>
 #include <tdata.h>
 
 #include <api/types.h>
+#include <api/syscalls.h>
 
 const StackSize defaultStackSize = 4096;
 const Time defaultTimeSlice = 2;            // x 55ms

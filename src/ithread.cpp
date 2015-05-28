@@ -21,14 +21,14 @@ IThread::~IThread() {
 }
 
 void IThread::takeOver() {
-    idling = 1;
 
     tick = pcb->timeSlice;
 
+    kernel_mode = 0;
+    idling = 1;
+
     _SP = pcb->sp;
     _SS = pcb->ss;
-
-    kernel_mode = 0;
 
     asm {
         pop bp

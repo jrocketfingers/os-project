@@ -6,8 +6,9 @@
 #include <ivtentry.h>
 
 #define PREPAREENTRY(IvtNo, old) \
-IVTEntry entry##IvtNo(IvtNo); \
-void ISR##IvtNo() { \
+void interrupt ISR##IvtNo(); \
+IVTEntry entry##IvtNo(IvtNo, ISR##IvtNo); \
+void interrupt ISR##IvtNo() { \
     if(old) entry##IvtNo.oldISR(); \
     sys_sigev(IvtNo); \
 }
