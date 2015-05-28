@@ -72,7 +72,7 @@ void endThread(ThreadData *data) {
 
     threadThatEnds->done = 1;
 
-    //cout << "Thread ending " << data->tid << endl;
+    cout << "Thread ending " << data->tid << endl;
 
     while(!threadThatEnds->waitingOn.empty()) {
         threadThatIsUnblocked = threadThatEnds->waitingOn.get();
@@ -233,6 +233,7 @@ void dispatchSyscall(unsigned callID, void *data) {
         _SP = running->sp;
         _SS = running->ss;
     } else {
+        cout << "Idling...";
         iThread->takeOver(); /* exit point */
     }
 

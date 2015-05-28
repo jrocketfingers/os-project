@@ -6,7 +6,7 @@
 #include <queue.h>
 #include <semaphor.h>
 
-#define THDS 10
+#define THDS 100
 
 int i = 0;
 
@@ -17,15 +17,15 @@ public:
     TestThread(int v) : Thread(32) { this->v = v; }
 
     void run() {
-        cout << "Waiting. " << v << endl;
+        //cout << "Waiting. " << v << endl;
         //s->wait();
-        cout << "Locked. " << v << ";" << endl;
-        //for(unsigned long i = 0; i <= 2000000; i++) {
+        //cout << "Locked. " << v << ";" << endl;
+        for(unsigned long i = 0; i <= 20000000; i++) {
             //if(i % 10000 == 0)
                 //cout << v << ": " << i << endl;
-        //}
-        Thread::sleep(100 + v * 10);
-        cout << "Finished." << v << endl;
+        }
+        //Thread::sleep(100 + v * 10);
+        //cout << "Finished." << v << endl;
         //s->signal();
     }
 
