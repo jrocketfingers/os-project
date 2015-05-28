@@ -10,6 +10,7 @@
 #include <syscalls.h>       /* enumerated list of syscalls */
 #include <scheduler.h>      /* scheduler implementation */
 #include <kernsem.h>        /* handles kernel */
+#include <ivtentry.h>
 #include <kernev.h>
 #include <sleepq.h>
 #include <ithread.h>
@@ -135,10 +136,13 @@ void semVal(int *sid) {
 }
 
 
-void newEvent(unsigned *eid) {
-    KernEv *ev = new KernEv(IVTNo ivtNo);
-    *eid = KernEvs->append(ev);
-    ev->eid = *eid;
+void newEvent(unsigned *ivt) {
+    KernEv *ev = new KernEv();
+    IVT[*ivt]->setKernEv(ev);
+
+    /* return the new eid using the ivt ptr */
+    *ivt = KernEvs->append(ev);
+    ev->eid = *ivt;
 }
 
 

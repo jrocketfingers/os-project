@@ -15,7 +15,7 @@ void sys_waitsem(unsigned sid);
 void sys_sigsem(unsigned sid);
 int sys_semval(unsigned sid);
 
-unsigned sys_newev(IVTNo ivtNo);
+unsigned sys_newev(unsigned ivtNo);
 void sys_deleteev(unsigned eid);
 void sys_waitev(unsigned eid);
 void sys_sigev(unsigned eid);

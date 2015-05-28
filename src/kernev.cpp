@@ -5,7 +5,7 @@
 #include <schedule.h>
 
 /* kernel.cpp */
-extern *PCB running;
+extern PCB* running;
 extern char dont_schedule;
 
 KernEv::KernEv() {

@@ -7,10 +7,9 @@
 
 IVTEntry* IVT[256];
 
-
-IVTEntry::IVTEntry(IVTNo ivtno, void interrupt (*ISR)()) {
+IVTEntry::IVTEntry(IVTNo ivtno, ISR newISR) {
     kevent = 0;
-    IVT[ivtNo] = this;
+    IVT[ivtno] = this;
 
     asm {
         push es
@@ -31,14 +30,14 @@ IVTEntry::IVTEntry(IVTNo ivtno, void interrupt (*ISR)()) {
     asm mov ax, word ptr es:bx;
     oldISR_seg = _AX;
 
-    oldISR = MK_FP(oldISR_seg, oldISR_off);
+    oldISR = (ISR)MK_FP(oldISR_seg, oldISR_off);
 
 
-    _AX = FP_OFF(ISR);
+    _AX = FP_OFF(newISR);
     _BX = ivtno*4;
     asm mov word ptr es:bx, ax;
 
-    _AX = FP_SEG(ISR);
+    _AX = FP_SEG(newISR);
     _BX = ivtno*4 + 2;
     asm mov word ptr es:bx, ax;
 
@@ -67,4 +66,8 @@ IVTEntry::~IVTEntry() {
 
     asm pop es;
     asm pop ax;
+}
+
+void IVTEntry::setKernEv(KernEv* ev) {
+    kevent = ev;
 }

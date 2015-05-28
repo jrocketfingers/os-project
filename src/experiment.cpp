@@ -18,15 +18,15 @@ public:
 
     void run() {
         cout << "Waiting. " << v << endl;
-        s->wait();
+        //s->wait();
         cout << "Locked. " << v << ";" << endl;
         //for(unsigned long i = 0; i <= 2000000; i++) {
             //if(i % 10000 == 0)
                 //cout << v << ": " << i << endl;
         //}
-        Thread::sleep(20);
+        Thread::sleep(100 + v * 10);
         cout << "Finished." << v << endl;
-        s->signal();
+        //s->signal();
     }
 
 private:

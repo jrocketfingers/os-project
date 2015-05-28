@@ -9,6 +9,7 @@
 #include <pcb.h>
 #include <kernel.h>
 #include <kernsem.h>
+#include <kernev.h>
 
 #include <schedule.h>
 
@@ -39,6 +40,7 @@ SleepQ sleeping;
 /* list of available threads */
 ffvector<PCB*>* PCBs = 0;
 ffvector<KernSem*>* KernSems = 0;
+ffvector<KernEv*>* KernEvs = 0;
 
 /* kernel mode running */
 bool kernel_mode = 0;

@@ -7,8 +7,10 @@ typedef void interrupt (*ISR)();
 
 class IVTEntry {
 public:
-    IVTEntry(IVTNo ivtNo, void interrupt (*ISR)()); /* sets up the entry in the entry table */
+    IVTEntry(IVTNo ivtNo, ISR newISR); /* sets up the entry in the entry table */
     ~IVTEntry(); /* restores the old interrupt routine */
+
+    void setKernEv(KernEv *ev);
 
     KernEv *kevent;
 

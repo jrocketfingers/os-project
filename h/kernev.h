@@ -6,7 +6,7 @@
 
 class KernEv {
 public:
-    KernEv(IVTNo ivtNo);
+    KernEv();
     ~KernEv();
 
     void signal();

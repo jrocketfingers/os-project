@@ -29,7 +29,7 @@ public:
         if(head) {
             Elem *cursor = head;
             Elem *prev = 0;
-            while(cursor && cursor->ticks < sleep) {
+            while(cursor && cursor->ticks <= sleep) {
                 prev = cursor;
                 cursor = cursor->next;
                 newSleeper->ticks -= prev->ticks;
@@ -44,6 +44,9 @@ public:
         }
         else
             head = newSleeper;
+
+        /* diagnostics */
+        //cout << "Put to sleep: " << sleeper->id << "; for " << sleep << " ticks." << endl;
     }
 
     void tick() {
@@ -60,6 +63,15 @@ public:
                 delete old;
             }
         }
+
+        /* diagnostics */
+        //Elem *cursor = head;
+        //while(cursor) {
+            //cout << "[ID " << cursor->pcb->id << "; t " << cursor->ticks << "]--";
+            //cursor = cursor->next;
+        //}
+
+        //cout << endl;
     }
 };
 
