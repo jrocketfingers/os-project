@@ -3,8 +3,6 @@
 
 /* kernel.cpp */
 extern unsigned int tick;
-extern bool kernel_mode;
-extern bool idling;
 
 void idle() {
     while(1);
@@ -24,8 +22,8 @@ void IThread::takeOver() {
 
     tick = pcb->timeSlice;
 
+    Kernel::idle();
     kernel_mode = 0;
-    idling = 1;
 
     _SP = pcb->sp;
     _SS = pcb->ss;

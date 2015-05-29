@@ -49,8 +49,9 @@ void PCB::start() {
 }
 
 void PCB::schedule() {
-    if(state == STATE_running)
+    if(state == STATE_running) {
         state = STATE_ready;
+    }
 #ifdef DEBUG__THREADS
     else {
         cout << "PCB::schedule ERROR: Non-running thread scheduling!" << endl;

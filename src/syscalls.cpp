@@ -205,6 +205,7 @@ void dispatchSyscall(unsigned callID, void *data) {
 #endif
     switch(callID) {
         case SYS_dispatch:
+            _dispatch();
             break;
         case SYS_newthread:
             newThread((ThreadData*)data);
@@ -257,7 +258,8 @@ void dispatchSyscall(unsigned callID, void *data) {
             break;
     }
 
-    _dispatch(); /* change the active running */
+    if(running->state != STATE_running)
+        _dispatch(); /* change the active running */
 
     if(running != 0) { /* non-sleeping dispatched thread exists */
         tick = running->timeSlice;
@@ -265,7 +267,9 @@ void dispatchSyscall(unsigned callID, void *data) {
         _SP = running->sp;
         _SS = running->ss;
     } else {
-        Kernel::idle();
+#ifdef DEBUG__THREADS
+        cout << "Idling..." << endl;
+#endif
         iThread->takeOver(); /* exit point */
     }
 

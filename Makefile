@@ -14,7 +14,7 @@ LIBSPATH = C:\bc31\lib;D:\lib\;
 APIOBJ = out\api\*.obj
 OUTOBJ = out\*.obj
 
-all:	os api ptest link
+all:	clean os api mytest link
 
 link:	$(TESTSRC) os api
 	bcc.exe -mh -v -nOUT -eos.exe -I$(INCLUDEPATH) -L$(LIBSPATH) $(LIBS) $(APIOBJ) $(OUTOBJ)

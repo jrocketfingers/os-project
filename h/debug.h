@@ -3,9 +3,9 @@
 
 #include <iostream.h>
 
-//#define DEBUG__VERBOSE
-//#define DEBUG__THREADS
+#define DEBUG__VERBOSE
+#define DEBUG__THREADS
 //#define DEBUG__SEMAPHORES
-#define DEBUG__EVENTS
+//#define DEBUG__EVENTS
 
 #endif

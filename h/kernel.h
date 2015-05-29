@@ -12,7 +12,8 @@
 enum KernelState {
     STATE_idling=1,
     STATE_working,
-    STATE_wakeup
+    STATE_wakeup,
+    STATE_kthread
 };
 
 class Kernel {
