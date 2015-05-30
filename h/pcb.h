@@ -13,17 +13,19 @@ enum PCBState {
     STATE_running,
     STATE_stopped,
     STATE_blocked,
-    STATE_interrupted
+    STATE_idle
 };
 
+#ifdef DEBUG__THREADS
 const char PCBStateName[][30] = {
     "new",
     "ready",
     "running",
     "stopped",
     "blocked",
-    "interrupted"
+    "idle"
 };
+#endif
 
 class PCB {                      // Kernel's implementation of a user's thread
 public:

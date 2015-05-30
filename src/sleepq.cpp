@@ -48,9 +48,6 @@ void SleepQ::tick() {
         /* in case there is more than one sleeping thread with the same tick */
         head->ticks--;
 
-        if(head->ticks == 0)
-            Kernel::wake();
-
         while(head && head->ticks == 0) {
             Elem *old;
             Scheduler::put(head->pcb);

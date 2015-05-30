@@ -38,12 +38,16 @@ void PCB::createStack(void* _this, void* _run, StackSize stackSize) {
 }
 
 void PCB::start() {
-    if(state == STATE_new)
+    if(state == STATE_new) {
         state = STATE_ready;
+        Kernel::active_threads++;
+    }
     else {
+#ifdef DEBUG__THREADS
         cout << "PCB::start ERROR: Old thread trying to start!" << endl;
         cout << "PCBs state was: " << PCBStateName[state] << endl;
         cout << "PCBs ID was: " << id << endl;
+#endif
         exit(1);
     }
 }
@@ -52,61 +56,71 @@ void PCB::schedule() {
     if(state == STATE_running) {
         state = STATE_ready;
     }
-#ifdef DEBUG__THREADS
     else {
+#ifdef DEBUG__THREADS
         cout << "PCB::schedule ERROR: Non-running thread scheduling!" << endl;
         cout << "PCBs state was: " << PCBStateName[state] << endl;
         cout << "PCBs ID was: " << id << endl;
+#endif
         exit(1);
     }
-#endif
 }
 
 void PCB::stop() {
     state = STATE_stopped;
+    active_threads--;
 }
 
 void PCB::dispatch() {
     if(state == STATE_ready) {
         state = STATE_running;
     }
-
-#ifdef DEBUG__THREADS
     else {
+#ifdef DEBUG__THREADS
         cout << "PCB::dispatch ERROR: Thread is not ready (blocked, new or stopped)!" << endl;
         cout << "PCBs state was: " << PCBStateName[state] << endl;
         cout << "PCBs ID was: " << id << endl;
+#endif
         exit(1);
     }
-#endif
 }
 
 void PCB::block() {
     if(state == STATE_running) {
         state = STATE_blocked;
+        Kernel::active_threads--;
+        Kernel::blocked_threads++;
     }
-
-#ifdef DEBUG__THREADS
     else {
+#ifdef DEBUG__THREADS
         cout << "PCB::block ERROR: Non-running thread blocking!" << endl;
         cout << "PCBs state was: " << PCBStateName[state] << endl;
         cout << "PCBs ID was: " << id << endl;
+#endif
         exit(1);
     }
-#endif
 }
 
 void PCB::unblock() {
     if(state == STATE_blocked) {
         state = STATE_ready;
+        Kernel::active_threads++;
+        Kernel::blocked_threads--;
     }
-
-#ifdef DEBUG__THREADS
     else {
+#ifdef DEBUG__THREADS
         cout << "PCB::unblock ERROR: Only a blocked thread can be unblocked!" << endl;
         cout << "PCBs state was: " << PCBStateName[state] << endl;
         cout << "PCBs ID was: " << id << endl;
+#endif
         exit(1);
     }
-#endif
+}
+
+void PCB::sleep(Time timeSlice) {
+    this->block();
+    Kernel::sleeping_threads++;
+    Kernel::active_threads--;
+
+    sleeping.put(running, timeSlice); /* time slice - sleeping time */
 }

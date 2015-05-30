@@ -48,28 +48,19 @@ bool idling = 0;
 bool wakeup;
 
 void interrupt systick() {
+    asm int 60h; /* timer routine that we switched out */
+
     /* do not tick if the time slice is set to 0
      * unlimited runtime thread */
-    if(tick > 0 && running->timeSlice && !kernel_mode) tick--;
-
-    asm int 60h; /* timer routine that we switched out */
+    if(running->tick != 0) {
+        tick++;
+    }
 
     sleeping.tick();
 
-    /* tick must not be under 0, since it's marked unsigned */
-    if(Kernel::state == STATE_working && tick == 0 && running->timeSlice && !kernel_mode) {
-        running->sp = _SP;
-        running->ss = _SS;
-    }
-    else if(Kernel::state == STATE_wakeup) {
-        iThread->pcb->sp = _SP;
-        iThread->pcb->ss = _SS;
-
-        Kernel::work();
-    }
-
-    /* syscall dispatch */
-    if(Kernel::state == STATE_working)
+    /* if we're safe to preempt */
+    if(Kernel::state == STATE_working && tick == running->tick)
+        /* syscall */
         dispatch();
 }
 
@@ -77,6 +68,7 @@ void interrupt systick() {
 void interrupt syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_ds,
                        unsigned p_es, unsigned p_dx, unsigned p_cx, unsigned p_bx,
                        unsigned p_ax, unsigned p_ip, unsigned p_cs, unsigned flags) {
+    Kernel::state = STATE_kmod;
     /* save stack */
     running->sp = _SP;
     running->ss = _SS;
@@ -134,10 +126,10 @@ void Kernel::init() {
     }
 
     /* mark the userMain as the running thread */
-    running = userMain;
-    running->state = STATE_running; /* manually sets usermain as the running thread */
-    Kernel::state = STATE_working;
-    tick    = 2;
+    running         = userMain;
+    running->state  = STATE_running; /* manually sets usermain as the running thread */
+    Kernel::state   = STATE_working;
+    tick            = 0;
 
 #ifdef DEBUG
     cout << "Kernel initialization finished." << endl;

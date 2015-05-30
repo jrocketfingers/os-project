@@ -1,6 +1,7 @@
 #ifndef __H_QUEUE__
 #define __H_QUEUE__
 
+#include <debug.h>
 #include <api/types.h>
 
 template <class T>
@@ -20,17 +21,36 @@ public:
             tail->next = newElem;
 
         tail = newElem;
+
+        elements++;
     }
 
     T get() {
+        if(elements <= 0) {
+#ifndef DEBUG__QUEUE
+            cout << "Trying to get from an empty queue! Could also be that the elements variable corrupted." << endl;
+#endif
+            exit(1);
+        }
+
         Elem* ret = head;
         head = head->next;
+
+        elements--;
 
         return ret->val;
     }
 
     bool empty() {
-        return head == 0;
+        if(elements < 0) {
+#ifndef DEBUG__QUEUE
+            cout << "Elements value is negative. Something smells here." << endl;
+#endif
+            exit(1);
+        }
+
+        return elements == 0;
+        //return head == 0;
     }
 
 private:
@@ -41,6 +61,7 @@ private:
     };
 
     Elem *head, *tail;
+    int elements = 0;
 };
 
 #endif

@@ -1,8 +1,11 @@
-#include <iostream.h>
+#include <debug.h>
+
 #include <ithread.h>
+#include <kernel.h>
 
 /* kernel.cpp */
 extern unsigned int tick;
+extern bool kernel_mode;
 
 void idle() {
     while(1);
@@ -10,6 +13,8 @@ void idle() {
 
 IThread::IThread() {
     pcb = new PCB(1); /* using the smallest tick unit */
+    pcb->id = -1;
+    pcb->state = STATE_idle;
 
     pcb->createStack(0, idle, 1024);
 }

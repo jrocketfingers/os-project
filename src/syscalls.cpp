@@ -50,32 +50,40 @@ void _dispatch() {
     cout << "Switching from: " << running->id << endl;
 #endif
 
-    if(running->state == STATE_running) {
+    if(running->state == STATE_ready) {
         /* the scheduler code can be moved to the PCB, consider that */
         /* argument against the idea - PCB should be decoupled from the kernel
          * implementation? */
 
 #ifdef DEBUG__THREADS
-        cout << "Putting thread ID: " << running->id << endl;
+        cout << "Schedule thread ID: " << running->id << endl;
 #endif
 
         Scheduler::put(running);
-        running->schedule(); /* adjust the state accordingly */
     }
 
+    /* if the thread is not running anymore (blocked, sleeping, stopped) */
+    if(running->state != STATE_running) {
+        fetch_next_running();
+        if(running) {
+            running->dispatch();
+#ifdef DEBUG__THREADS
+            cout << "Getting thread: " << running->id << endl;
+#endif
+        }
+    }
+}
+
+
+void fetch_next_running() {
     do {
         running = Scheduler::get();
-        if(running == 0) break; /* if there's nothing to schedule */
-    } while(running->state == STATE_stopped); /* if the newly fetched thread is marked stopped
-                                                (terminated), pop it, and find another */
-
-    if(running) {
-        running->dispatch();
-
 #ifdef DEBUG__THREADS
-        cout << "Getting thread: " << running->id << endl;
+        cout << "Thread with state" << PCBStateName[running->state] << "fetched from scheduler" << endl;
 #endif
-    }
+        if(running == 0) break; /* if there's nothing to schedule */
+    } while(running->state != STATE_ready); /* if the newly fetched thread is marked stopped
+                                                (terminated), pop it, and find another */
 }
 
 
@@ -121,7 +129,7 @@ void waitToComplete(ThreadData *data) {
 
 
 void sleep(ThreadData *data) {
-    sleeping.put(running, data->timeSlice); /* time slice - sleeping time */
+    running->sleep(data->timeSlice);
 }
 
 
@@ -205,7 +213,10 @@ void dispatchSyscall(unsigned callID, void *data) {
 #endif
     switch(callID) {
         case SYS_dispatch:
-            _dispatch();
+        case SYS_preempt:
+            /* both timer and manual dispatching set the thread to ready
+             * the switch is executed in _dispatch at the end of syscall */
+            running->schedule();
             break;
         case SYS_newthread:
             newThread((ThreadData*)data);
