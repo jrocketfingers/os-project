@@ -87,11 +87,16 @@ void _dispatch() {
         Scheduler::put(Kernel::running);
     }
 
+    #ifdef DEBUG__THREADS
+    cout << "[DISPATCH] Active threads: " << Kernel::active_threads << endl;
+    cout << "[DISPATCH] Scheduled threads: " << Kernel::ready_threads << endl;
+    cout << "[DISPATCH] Blocked threads: " << Kernel::blocked_threads << endl;
+    #endif
+
     /* if the thread is not running anymore (blocked, sleeping, stopped) */
     if(Kernel::running->state != STATE_running) {
         //fetch_next_running_or_idle(); /* exit point if we're idling */
         if((Kernel::running = Scheduler::get()) == 0) {
-            cout << "No running thread available, idling." << endl;
             Kernel::iThread.takeOver();
         }
 
@@ -301,6 +306,12 @@ void dispatchSyscall(unsigned callID, void *data) {
             #endif
             break;
     }
+
+    #ifdef DEBUG__THREADS
+    cout << "Active threads: " << Kernel::active_threads << endl;
+    cout << "Scheduled threads: " << Kernel::ready_threads << endl;
+    cout << "Blocked threads: " << Kernel::blocked_threads << endl;
+    #endif
 
     switch_context();
 }

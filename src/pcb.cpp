@@ -41,6 +41,7 @@ void PCB::start() {
     if(state == STATE_new) {
         state = STATE_ready;
         Kernel::active_threads++;
+        Kernel::ready_threads++;
     }
     else {
 #ifdef DEBUG__THREADS
@@ -55,6 +56,7 @@ void PCB::start() {
 void PCB::schedule() {
     if(state == STATE_running) {
         state = STATE_ready;
+        Kernel::ready_threads++;
     }
     else {
 #ifdef DEBUG__THREADS
@@ -74,6 +76,7 @@ void PCB::stop() {
 void PCB::dispatch() {
     if(state == STATE_ready) {
         state = STATE_running;
+        Kernel::ready_threads--;
     }
     else {
 #ifdef DEBUG__THREADS
@@ -105,6 +108,7 @@ void PCB::unblock() {
     if(state == STATE_blocked) {
         state = STATE_ready;
         Kernel::active_threads++;
+        Kernel::ready_threads++;
         Kernel::blocked_threads--;
     }
     else {

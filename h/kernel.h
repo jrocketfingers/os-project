@@ -39,6 +39,7 @@ public:
     static void work() { state = STATE_working; }
 
     static int active_threads;
+    static int ready_threads;
     static int blocked_threads;
     static int sleeping_threads;
 

@@ -30,6 +30,7 @@ PCB*    Kernel::running = 0;
 KernelState Kernel::state;
 
 int Kernel::active_threads      = 0;
+int Kernel::ready_threads       = 0;
 int Kernel::blocked_threads     = 0;
 int Kernel::sleeping_threads    = 0;
 
@@ -144,6 +145,7 @@ void Kernel::init() {
     /* mark the userMain as the Kernel::running thread */
     Kernel::running         = userMain;
     Kernel::running->state  = STATE_running; /* manually sets usermain as the running thread */
+    Kernel::active_threads++;
     Kernel::state   = STATE_working;
     tick            = 0;
 
