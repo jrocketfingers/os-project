@@ -16,7 +16,7 @@ void SleepQ::put(PCB* sleeper, Time sleep) {
     if(head) {
         Elem *cursor = head;
         Elem *prev = 0;
-        while(cursor && cursor->ticks <= sleep) {
+        while(cursor && cursor->ticks <= newSleeper->ticks) {
             prev = cursor;
             cursor = cursor->next;
             newSleeper->ticks -= prev->ticks;
@@ -29,18 +29,36 @@ void SleepQ::put(PCB* sleeper, Time sleep) {
         } else
             prev->next = newSleeper;
 
+        Time rest = newSleeper->ticks;
+        Time decr = newSleeper->ticks;
+        /* decaying decrementing the differential queue
+         * wow, I just made up a buncha CS names */
         while(cursor) {
-            cursor->ticks -= newSleeper->ticks;
+            decr = cursor->ticks;
+            cursor->ticks -= rest;
+            if(decr > rest) break;
+            rest -= decr;
             cursor = cursor->next;
         }
     }
     else
         head = newSleeper;
 
-#ifdef DEBUG__THREADS
+    #ifdef DEBUG__THREADS
     /* diagnostics */
     cout << "Put to sleep: " << sleeper->id << "; for " << sleep << " ticks." << endl;
-#endif
+    #endif
+
+    #ifdef DEBUG__SLEEP
+    /* diagnostics */
+    Elem *cursor = head;
+    while(cursor) {
+        cout << "[ID " << cursor->pcb->id << "; t " << cursor->ticks << "]--";
+        cursor = cursor->next;
+    }
+
+    cout << endl;
+    #endif
 }
 
 
@@ -51,8 +69,16 @@ void SleepQ::tick() {
 
         while(head && head->ticks == 0) {
             Elem *old;
-            Scheduler::put(head->pcb);
+
             head->pcb->unblock();
+            #ifdef DEBUG__VERBOSE
+            cout << "[SLEEPQ] Putting thread id " << head->pcb->id << " into scheduler." << endl;
+            cout << "[SLEEPQ] Thread's state is: " << PCBStateName[head->pcb->state] << endl;
+            #endif
+            Scheduler::put(head->pcb);
+
+            Kernel::state = STATE_wakeup;
+
             old = head;
 
             head = head->next;
@@ -61,12 +87,14 @@ void SleepQ::tick() {
         }
     }
 
+    #ifdef DEBUG__SLEEP
     /* diagnostics */
-    //Elem *cursor = head;
-    //while(cursor) {
-        //cout << "[ID " << cursor->pcb->id << "; t " << cursor->ticks << "]--";
-        //cursor = cursor->next;
-    //}
+    Elem *cursor = head;
+    while(cursor) {
+        cout << "[ID " << cursor->pcb->id << "; t " << cursor->ticks << "]--";
+        cursor = cursor->next;
+    }
 
-    //cout << endl;
+    cout << endl;
+    #endif
 }

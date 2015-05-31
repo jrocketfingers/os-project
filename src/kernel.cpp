@@ -38,7 +38,7 @@ unsigned int oldTimerSEG;
 unsigned int oldTimerOFF;
 
 /* ticker */
-unsigned int tick;
+int Kernel::tick = 0;
 
 /* sleeping queue */
 SleepQ Kernel::sleeping;
@@ -54,16 +54,17 @@ void interrupt systick() {
     /* do not tick if the time slice is set to 0
      * unlimited runtime thread */
     if(Kernel::running->timeSlice != 0) {
-        tick++;
+        Kernel::tick++;
     }
 
     Kernel::sleeping.tick();
 
     /* if we're safe to preempt */
-    if(Kernel::state == STATE_working && tick >= Kernel::running->timeSlice) {
+    if(Kernel::state == STATE_wakeup ||
+      (Kernel::state == STATE_working && Kernel::tick >= Kernel::running->timeSlice)) {
         /* syscall */
         dispatch();
-        tick = 0;
+        Kernel::tick = 0;
     }
 }
 
@@ -71,10 +72,8 @@ void interrupt systick() {
 void interrupt syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_ds,
                        unsigned p_es, unsigned p_dx, unsigned p_cx, unsigned p_bx,
                        unsigned p_ax, unsigned p_ip, unsigned p_cs, unsigned flags) {
-    asm cli;
-
     /* save stack */
-    if(Kernel::state == STATE_working) {
+    if(Kernel::state == STATE_working || Kernel::state == STATE_wakeup) {
         Kernel::running->sp = _SP;
         Kernel::running->ss = _SS;
     }

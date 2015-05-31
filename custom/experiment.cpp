@@ -6,6 +6,9 @@
 #include <queue.h>
 #include <semaphor.h>
 
+#include <pcb.h>
+#include <schedule.h>
+
 #define THDS 20
 
 int i = 0;
@@ -24,7 +27,7 @@ public:
             if(i % 1000 == 0)
                 cout << v << ": " << i << endl;
         }
-        //Thread::sleep(100 + v * 10);
+        //Thread::sleep(v * 10);
         cout << "[EXPERIMENT] Finished " << v << endl;
         //s->signal();
     }

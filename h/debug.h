@@ -7,6 +7,7 @@
 #define DEBUG
 #define DEBUG__VERBOSE
 #define DEBUG__THREADS
+//#define DEBUG__SLEEP
 //#define DEBUG__SEMAPHORES
 //#define DEBUG__EVENTS
 

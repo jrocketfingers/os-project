@@ -30,7 +30,7 @@ void newThread(ThreadData* data) {
 }
 
 
-void fetch_next_running() {
+void fetch_next_running_or_idle() {
     do {
         Kernel::running = Scheduler::get();
 
@@ -38,7 +38,7 @@ void fetch_next_running() {
         cout << "Thread with state " << PCBStateName[Kernel::running->state] << " fetched from scheduler" << endl;
         #endif
 
-        if(Kernel::running == 0) break; /* if there's nothing to schedule */
+        if(Kernel::running == 0) Kernel::iThread.takeOver(); /* if there's nothing to schedule */
     } while(Kernel::running->state != STATE_ready); /* if the newly fetched thread is marked stopped
                                                 (terminated), pop it, and find another */
 }
@@ -89,16 +89,17 @@ void _dispatch() {
 
     /* if the thread is not running anymore (blocked, sleeping, stopped) */
     if(Kernel::running->state != STATE_running) {
-        fetch_next_running();
-        if(Kernel::running) {
-            Kernel::running->dispatch();
-            #ifdef DEBUG__THREADS
-            cout << "Thread " << Kernel::running->id << " dispatched." << endl;
-            #endif
-            switch_context(); /* exit point if we're working */
-        } else {
+        //fetch_next_running_or_idle(); /* exit point if we're idling */
+        if((Kernel::running = Scheduler::get()) == 0) {
+            cout << "No running thread available, idling." << endl;
             Kernel::iThread.takeOver();
         }
+
+        Kernel::running->dispatch();
+        #ifdef DEBUG__THREADS
+        cout << "Thread " << Kernel::running->id << " dispatched." << endl;
+        #endif
+        switch_context(); /* exit point if we're working */
     }
 }
 
@@ -241,7 +242,8 @@ void dispatchSyscall(unsigned callID, void *data) {
         case SYS_preempt:
             /* both timer and manual dispatching set the thread to ready
              * the switch is executed in _dispatch at the end of syscall */
-            Kernel::running->schedule();
+            if(Kernel::running->state == STATE_running)
+                Kernel::running->schedule();
             _dispatch();
             break;
         case SYS_newthread:

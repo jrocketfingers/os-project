@@ -118,7 +118,6 @@ void PCB::unblock() {
 }
 
 void PCB::sleep(Time timeSlice) {
-    this->block();
     Kernel::sleeping_threads++;
     Kernel::active_threads--;
 

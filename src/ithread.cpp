@@ -27,6 +27,7 @@ void IThread::takeOver() {
     asm cli;
 
     Kernel::idle();
+    Kernel::running = this->pcb;
 
     _SP = pcb->sp;
     _SS = pcb->ss;

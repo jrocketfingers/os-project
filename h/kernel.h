@@ -52,6 +52,8 @@ public:
     static IThread iThread;
 
     static PCB *running;
+
+    static int tick;
 };
 
 #endif
