@@ -1,7 +1,8 @@
 #ifndef __H_ITHREAD__
 #define __H_ITHREAD__
 
-#include <pcb.h>
+/* forward declaration */
+class PCB;
 
 class IThread {
 public:

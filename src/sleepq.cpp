@@ -3,6 +3,7 @@
 #include <api/syscalls.h>
 #include <schedule.h>
 #include <kernel.h>
+#include <pcb.h>
 
 #include <debug.h>
 

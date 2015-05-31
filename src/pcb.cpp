@@ -68,7 +68,7 @@ void PCB::schedule() {
 
 void PCB::stop() {
     state = STATE_stopped;
-    active_threads--;
+    Kernel::active_threads--;
 }
 
 void PCB::dispatch() {
@@ -122,5 +122,5 @@ void PCB::sleep(Time timeSlice) {
     Kernel::sleeping_threads++;
     Kernel::active_threads--;
 
-    sleeping.put(running, timeSlice); /* time slice - sleeping time */
+    Kernel::sleeping.put(Kernel::running, timeSlice); /* time slice - sleeping time */
 }

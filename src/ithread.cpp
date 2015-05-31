@@ -2,10 +2,10 @@
 
 #include <ithread.h>
 #include <kernel.h>
+#include <pcb.h>
 
 /* kernel.cpp */
 extern unsigned int tick;
-extern bool kernel_mode;
 
 void idle() {
     while(1);
@@ -24,11 +24,9 @@ IThread::~IThread() {
 }
 
 void IThread::takeOver() {
-
-    tick = pcb->timeSlice;
+    asm cli;
 
     Kernel::idle();
-    kernel_mode = 0;
 
     _SP = pcb->sp;
     _SS = pcb->ss;

@@ -4,10 +4,6 @@
 
 #include <debug.h>
 
-/* kernel.cpp */
-extern PCB* running;
-extern char dont_schedule;
-
 
 KernSem::KernSem(int val) {
     this->value = val;
@@ -39,8 +35,8 @@ void KernSem::signal() {
 
 void KernSem::wait() {
     if(--value < 0) {
-        blocked.put(running);
-        running->block();
+        blocked.put(Kernel::running);
+        Kernel::running->block();
     }
 
 #ifdef DEBUG__SEMAPHORES

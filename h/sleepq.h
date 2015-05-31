@@ -2,7 +2,8 @@
 #define __H_SLEEPQ__
 
 #include <api/types.h>
-#include <pcb.h>
+
+class PCB;
 
 class SleepQ {
 public:

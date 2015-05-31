@@ -10,6 +10,8 @@ public:
     Queue() {
         head = 0;
         tail = 0;
+
+        elements = 0;
     }
 
     void put(T val) {
@@ -61,7 +63,7 @@ private:
     };
 
     Elem *head, *tail;
-    int elements = 0;
+    int elements;
 };
 
 #endif

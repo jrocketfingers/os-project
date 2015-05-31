@@ -1,9 +1,12 @@
+#include <kthread.h>
+
 #include <iostream.h>
 #include <dos.h>
 
 #include <kernel.h>
 #include <syscalls.h>
-#include <kthread.h>
+
+#include <pcb.h>
 
 #include <scheduler.h> /* dispatch needs it */
 
@@ -22,6 +25,8 @@ KThread::KThread() {
 
 
 void KThread::takeOver(unsigned callID, unsigned data_seg, unsigned data_off) {
+    asm cli;
+
     unsigned *top = pcb->stack + this->stackSize;
 
     *(--top) = data_seg;

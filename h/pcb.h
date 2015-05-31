@@ -1,6 +1,8 @@
 #ifndef __PCB_H__
 #define __PCB_H__
 
+#include <kernel.h>
+
 /* data structures */
 #include <queue.h>
 
@@ -18,6 +20,7 @@ enum PCBState {
 
 #ifdef DEBUG__THREADS
 const char PCBStateName[][30] = {
+    "INVALID STATE",
     "new",
     "ready",
     "running",
@@ -41,6 +44,7 @@ public:
     void stop();
     void block();
     void unblock();
+    void sleep(Time time);
 
     void schedule();
     void dispatch();
@@ -52,7 +56,7 @@ public:
     Time timeSlice;
     unsigned int id;
 
-    Queue<PCB*> waitingOn;
+    Queue<PCB*> blocking;
 
     unsigned int *stack;
 };

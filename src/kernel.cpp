@@ -3,8 +3,6 @@
 #include <api/syscalls.h>
 #include <syscalls.h>
 #include <vector.h>
-#include <kthread.h>
-#include <ithread.h>
 #include <thread.h>
 #include <pcb.h>
 #include <kernel.h>
@@ -12,6 +10,8 @@
 #include <kernev.h>
 #include <schedule.h>
 #include <sleepq.h>
+#include <kthread.h>
+#include <ithread.h>
 
 #include <debug.h>
 
@@ -23,9 +23,15 @@
     asm push ax;
 
 /* system threads */
-KThread *kThread;
-IThread *iThread;
-PCB *running = 0;
+KThread Kernel::kThread;
+IThread Kernel::iThread;
+PCB*    Kernel::running = 0;
+
+KernelState Kernel::state;
+
+int Kernel::active_threads      = 0;
+int Kernel::blocked_threads     = 0;
+int Kernel::sleeping_threads    = 0;
 
 /* original timer interrupt handler */
 unsigned int oldTimerSEG;
@@ -35,64 +41,75 @@ unsigned int oldTimerOFF;
 unsigned int tick;
 
 /* sleeping queue */
-SleepQ sleeping;
+SleepQ Kernel::sleeping;
 
 /* list of available threads */
-ffvector<PCB*>* PCBs = 0;
-ffvector<KernSem*>* KernSems = 0;
-ffvector<KernEv*>* KernEvs = 0;
-
-/* kernel mode running */
-bool kernel_mode = 0;
-bool idling = 0;
-bool wakeup;
+ffvector<PCB*>*     Kernel::PCBs        = 0;
+ffvector<KernSem*>* Kernel::KernSems    = 0;
+ffvector<KernEv*>*  Kernel::KernEvs     = 0;
 
 void interrupt systick() {
     asm int 60h; /* timer routine that we switched out */
 
     /* do not tick if the time slice is set to 0
      * unlimited runtime thread */
-    if(running->tick != 0) {
+    if(Kernel::running->timeSlice != 0) {
         tick++;
     }
 
-    sleeping.tick();
+    Kernel::sleeping.tick();
 
     /* if we're safe to preempt */
-    if(Kernel::state == STATE_working && tick == running->tick)
+    if(Kernel::state == STATE_working && tick >= Kernel::running->timeSlice) {
         /* syscall */
         dispatch();
+        tick = 0;
+    }
 }
 
 
 void interrupt syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_ds,
                        unsigned p_es, unsigned p_dx, unsigned p_cx, unsigned p_bx,
                        unsigned p_ax, unsigned p_ip, unsigned p_cs, unsigned flags) {
-    Kernel::state = STATE_kmod;
+    asm cli;
+
     /* save stack */
-    running->sp = _SP;
-    running->ss = _SS;
+    if(Kernel::state == STATE_working) {
+        Kernel::running->sp = _SP;
+        Kernel::running->ss = _SS;
+    }
+    else if(Kernel::state == STATE_idle) {
+        Kernel::iThread.pcb->sp = _SP;
+        Kernel::iThread.pcb->ss = _SS;
+    }
+    #ifdef DEBUG
+    else {
+        cout << "Entering kernel mode from an illegal state." << endl;
+        exit(1);
+    }
+    #endif
+
+    Kernel::state = STATE_kmode;
 
     /* switch to kernel stack */
-    kThread->takeOver(p_ax, p_bx, p_cx);
+    Kernel::kThread.takeOver(p_ax, p_bx, p_cx);
 }
 
 
 void Kernel::init() {
+    asm cli;
+
     /* prepare the initial thread information */
-    PCB* userMain = new PCB(1000); /* time slice = 2 */
+    PCB* userMain = new PCB(2); /* time slice = 2 */
     /* stackless thread; it uses the original stack*/
 
-    kThread = new KThread();
-    iThread = new IThread();
-
     /* make an available PCB listing, and add userMain */
-    PCBs            = new ffvector<PCB*>(3126);
+    PCBs            = new ffvector<PCB*>(100);
     userMain->id    = PCBs->append(userMain);
 
-#ifdef DEBUG
+    #ifdef DEBUG
     cout << "User main has ID: " << userMain->id << endl;
-#endif
+    #endif
 
     KernSems = new ffvector<KernSem*>(10);
 
@@ -125,15 +142,17 @@ void Kernel::init() {
         pop es
     }
 
-    /* mark the userMain as the running thread */
-    running         = userMain;
-    running->state  = STATE_running; /* manually sets usermain as the running thread */
+    /* mark the userMain as the Kernel::running thread */
+    Kernel::running         = userMain;
+    Kernel::running->state  = STATE_running; /* manually sets usermain as the running thread */
     Kernel::state   = STATE_working;
     tick            = 0;
 
-#ifdef DEBUG
+    #ifdef DEBUG
     cout << "Kernel initialization finished." << endl;
-#endif
+    #endif
+
+    asm sti;
 }
 
 

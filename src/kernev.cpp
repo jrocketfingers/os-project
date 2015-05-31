@@ -3,13 +3,9 @@
 
 #include <debug.h>
 
-/* kernel.cpp */
-extern PCB* running;
-extern char dont_schedule;
-
 KernEv::KernEv() {
     /* mark who created the event */
-    this->creator = running;
+    this->creator = Kernel::running;
 
     /* value is initially set to 0, since it is suposed to block at first */
     val = 0;

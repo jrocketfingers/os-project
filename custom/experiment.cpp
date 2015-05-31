@@ -6,7 +6,7 @@
 #include <queue.h>
 #include <semaphor.h>
 
-#define THDS 100
+#define THDS 20
 
 int i = 0;
 
@@ -17,15 +17,15 @@ public:
     TestThread(int v) : Thread(32) { this->v = v; }
 
     void run() {
-        //cout << "Waiting. " << v << endl;
+        cout << "Waiting. " << v << endl;
         //s->wait();
         //cout << "Locked. " << v << ";" << endl;
         for(unsigned long i = 0; i <= 65535; i++) {
-            if(i % 100000 == 0)
+            if(i % 1000 == 0)
                 cout << v << ": " << i << endl;
         }
         //Thread::sleep(100 + v * 10);
-        //cout << "Finished." << v << endl;
+        cout << "[EXPERIMENT] Finished " << v << endl;
         //s->signal();
     }
 
@@ -37,7 +37,7 @@ private:
 int userMain(int argc, char *argv[]) {
     cout << "In userMain." << endl;
 
-    s = new Semaphore();
+    //s = new Semaphore();
 
     TestThread **t = new TestThread*[THDS];
 
