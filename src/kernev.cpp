@@ -3,6 +3,8 @@
 
 #include <debug.h>
 
+extern void _dispatch();
+
 KernEv::KernEv() {
     /* mark who created the event */
     this->creator = Kernel::running;
@@ -23,6 +25,7 @@ void KernEv::signal() {
     if(val >= 0) {
         Scheduler::put(creator);
         creator->unblock();
+        _dispatch();
     }
 }
 
@@ -30,12 +33,14 @@ void KernEv::wait() {
     val--;
 
     /* blocking case */
-    if(val < 0)
+    if(val < 0) {
         creator->block();
+        _dispatch();
+    }
 
 #ifdef DEBUG__EVENTS
     /* diagnostics */
     if(val < -1)
-        cout << "Event has waited more than once, error!" << endl;
+        cout << "Event has waited more than once, error!" << endl << flush;
 #endif
 }

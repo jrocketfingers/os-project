@@ -67,13 +67,13 @@ void interrupt systick() {
         Kernel::running->sp = _SP;
         Kernel::running->ss = _SS;
         #ifdef DEBUG__VERBOSE
-        cout << "[systick] SP save adr: " << Kernel::running->sp << endl;
+        cout << "[systick] Thread " << Kernel::running->id << " SP save adr: " << Kernel::running->sp << endl << flush;
         #endif
 
         /* direct stack switch */
         Kernel::state = STATE_kmode;
         /* switch to kernel stack */
-        Kernel::kThread.takeOver(SYS_dispatch, 0, 0); /* registers are null */
+        Kernel::kThread.takeOver(SYS_preempt, 0, 0); /* registers are null */
 
         Kernel::tick = 0;
     }
@@ -87,7 +87,7 @@ void interrupt syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_d
     Kernel::running->sp = _SP;
     Kernel::running->ss = _SS;
     #ifdef DEBUG__VERBOSE
-    cout << "[syscall] SP save adr: " << Kernel::running->sp << endl;
+    cout << "[syscall] SP save adr: " << Kernel::running->sp << endl << flush;
     #endif
 
     Kernel::state = STATE_kmode;
@@ -99,18 +99,19 @@ void interrupt syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_d
 
 void Kernel::init() {
     /* prepare the initial thread information */
-    PCB* userMain = new PCB(1); /* time slice = 2 */
+    PCB* userMain = new PCB(1000); /* time slice = 2 */
     /* stackless thread; it uses the original stack*/
 
     /* make an available PCB listing, and add userMain */
-    PCBs            = new ffvector<PCB*>(100);
+    PCBs            = new ffvector<PCB*>(10);
     userMain->id    = PCBs->append(userMain);
 
     #ifdef DEBUG
-    cout << "User main has ID: " << userMain->id << endl;
+    cout << "User main has ID: " << userMain->id << endl << flush;
     #endif
 
     KernSems = new ffvector<KernSem*>(10);
+    KernEvs  = new ffvector<KernEv*>(10);
 
     /* prepare IVT */
     asm cli;
@@ -150,11 +151,29 @@ void Kernel::init() {
     tick            = 0;
 
     #ifdef DEBUG
-    cout << "Kernel initialization finished." << endl;
+    cout << "Kernel initialization finished." << endl << flush;
     #endif
 
     asm sti;
 }
 
 
-void Kernel::stop() {}
+void Kernel::stop() {
+    delete PCBs;
+    delete KernSems;
+    delete KernEvs;
+
+    asm {
+        cli;
+
+        mov ax, 0
+        mov es, ax
+
+        mov ax, oldTimerOFF
+        mov word ptr es:0020h, ax
+        mov ax, oldTimerSEG
+        mov word ptr es:0022h, ax
+
+        sti;
+    }
+}

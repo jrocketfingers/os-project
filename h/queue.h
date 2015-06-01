@@ -30,7 +30,7 @@ public:
     T get() {
         if(elements <= 0) {
 #ifndef DEBUG__QUEUE
-            cout << "Trying to get from an empty queue! Could also be that the elements variable corrupted." << endl;
+            cout << "Trying to get from an empty queue! Could also be that the elements variable corrupted." << endl << flush;
 #endif
             exit(1);
         }
@@ -46,7 +46,7 @@ public:
     bool empty() {
         if(elements < 0) {
 #ifndef DEBUG__QUEUE
-            cout << "Elements value is negative. Something smells here." << endl;
+            cout << "Elements value is negative. Something smells here." << endl << flush;
 #endif
             exit(1);
         }

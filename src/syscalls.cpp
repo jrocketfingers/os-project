@@ -35,7 +35,7 @@ void fetch_next_running_or_idle() {
         Kernel::running = Scheduler::get();
 
         #ifdef DEBUG__THREADS
-        cout << "Thread with state " << PCBStateName[Kernel::running->state] << " fetched from scheduler" << endl;
+        cout << "Thread with state " << PCBStateName[Kernel::running->state] << " fetched from scheduler" << endl << flush;
         #endif
 
         if(Kernel::running == 0) Kernel::iThread.takeOver(); /* if there's nothing to schedule */
@@ -46,10 +46,10 @@ void fetch_next_running_or_idle() {
 
 void switch_context() {
     #ifdef DEBUG__THREADS
-    cout << "[Switch] SP adr: " << Kernel::running->sp << endl << flush;
+    cout << "[Switch] Thread " << Kernel::running->id << " SP adr: " << Kernel::running->sp << endl << flush;
     #endif
     #ifdef DEBUG__VERBOSE
-    cout << "[syscall]====================| syscall done" << endl;
+    cout << "[syscall]====================| syscall done" << endl << flush;
     #endif
 
     asm cli;
@@ -79,7 +79,7 @@ void switch_context() {
  * wrapper to be named dispatch() */
 void _dispatch() {
     #ifdef DEBUG__THREADS
-    cout << "Switching from: " << Kernel::running->id << endl;
+    cout << "Switching from: " << Kernel::running->id << endl << flush;
     #endif
 
     if(Kernel::running->state == STATE_ready) {
@@ -88,21 +88,21 @@ void _dispatch() {
          * implementation? */
 
         #ifdef DEBUG__THREADS
-        cout << "Schedule thread ID: " << Kernel::running->id << endl;
+        cout << "Schedule thread ID: " << Kernel::running->id << endl << flush;
         #endif
 
         Scheduler::put(Kernel::running);
     }
     #ifdef DEBUG__THREADS
     else {
-        cout << "Thread ID " << Kernel::running->id << ", state " << PCBStateName[Kernel::running->state] << "; not scheduled." << endl;
+        cout << "Thread ID " << Kernel::running->id << ", state " << PCBStateName[Kernel::running->state] << "; not scheduled." << endl << flush;
     }
     #endif
 
     #ifdef DEBUG__THREADS
-    cout << "[DISPATCH] Active threads: " << Kernel::active_threads << endl;
-    cout << "[DISPATCH] Scheduled threads: " << Kernel::ready_threads << endl;
-    cout << "[DISPATCH] Blocked threads: " << Kernel::blocked_threads << endl;
+    cout << "[DISPATCH] Active threads: " << Kernel::active_threads << endl << flush;
+    cout << "[DISPATCH] Scheduled threads: " << Kernel::ready_threads << endl << flush;
+    cout << "[DISPATCH] Blocked threads: " << Kernel::blocked_threads << endl << flush;
     #endif
 
     /* if the thread is not running anymore (blocked, sleeping, stopped) */
@@ -114,7 +114,7 @@ void _dispatch() {
 
         Kernel::running->dispatch();
         #ifdef DEBUG__THREADS
-        cout << "Thread " << Kernel::running->id << " dispatched." << endl;
+        cout << "Thread " << Kernel::running->id << " dispatched." << endl << flush;
         #endif
         switch_context(); /* exit point if we're working */
     }
@@ -135,7 +135,7 @@ void endThread(ThreadData *data) {
     ending->stop();
 
     #ifdef DEBUG__THREADS
-    cout << "Thread ending " << data->tid << endl;
+    cout << "Thread ending " << data->tid << endl << flush;
     #endif
 
     while(!ending->blocking.empty()) {
@@ -154,7 +154,7 @@ void waitToComplete(ThreadData *data) {
         Kernel::running->block();
 
         #ifdef DEBUG__THREADS
-        cout << "Joining with thread [" << target->id << "]" << endl;
+        cout << "Joining with thread [" << target->id << "]" << endl << flush;
         #endif
 
         _dispatch();
@@ -162,10 +162,10 @@ void waitToComplete(ThreadData *data) {
     #ifdef DEBUG__THREADS
     else if(target->state == STATE_stopped)
     {
-        cout << "Thread already finished. [" << target->id << "] Not blocking." << endl;
+        cout << "Thread already finished. [" << target->id << "] Not blocking." << endl << flush;
     }
     else {
-        cout << "Blocking on a thread with illegal thread state (" << PCBStateName[target->state] << ")" << endl;
+        cout << "Blocking on a thread with illegal thread state (" << PCBStateName[target->state] << ")" << endl << flush;
     }
     #endif
 }
@@ -183,7 +183,7 @@ void newSemaphore(int *init) {
     sem->sid     = *init;
 
     #ifdef DEBUG__SEMAPHORES
-    cout << "[" << sem->sid << "] Semaphore initial value: " << sem->value << endl;
+    cout << "[" << sem->sid << "] Semaphore initial value: " << sem->value << endl << flush;
     #endif
 }
 
@@ -254,7 +254,7 @@ void deleteEvent(unsigned *eid) {
 
 void dispatchSyscall(unsigned callID, void *data) {
     #ifdef DEBUG__VERBOSE
-    cout << "[Call]=============| " << callNames[callID] << endl;
+    cout << "[syscall]==============================| " << callNames[callID] << endl << flush;
     #endif
 
     switch(callID) {
@@ -317,15 +317,15 @@ void dispatchSyscall(unsigned callID, void *data) {
             break;
         default:
             #ifdef DEBUG__VERBOSE
-            cout << "Inconsistent syscall! " << callID << endl;
+            cout << "Inconsistent syscall! " << callID << endl << flush;
             #endif
             break;
     }
 
     #ifdef DEBUG__THREADS
-    cout << "Active threads: " << Kernel::active_threads << endl;
-    cout << "Scheduled threads: " << Kernel::ready_threads << endl;
-    cout << "Blocked threads: " << Kernel::blocked_threads << endl;
+    cout << "Active threads: " << Kernel::active_threads << endl << flush;
+    cout << "Scheduled threads: " << Kernel::ready_threads << endl << flush;
+    cout << "Blocked threads: " << Kernel::blocked_threads << endl << flush;
     #endif
 
     switch_context();

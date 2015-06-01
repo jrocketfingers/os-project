@@ -4,7 +4,7 @@
 #include <api/types.h>
 #include <kernev.h>
 
-typedef void interrupt (*ISR)();
+typedef void interrupt (*ISR)(...);
 
 class IVTEntry {
 public:
@@ -12,14 +12,17 @@ public:
     ~IVTEntry(); /* restores the old interrupt routine */
 
     void setKernEv(KernEv *ev);
+    void signalEv();
 
     KernEv *kevent;
 
     ISR oldISR;
 
 private:
-    unsigned oldISR_seg;
-    unsigned oldISR_off;
+    //unsigned oldISR_seg;
+    //unsigned oldISR_off;
+
+    unsigned ivtno;
 };
 
 extern IVTEntry* IVT[256];

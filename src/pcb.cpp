@@ -37,7 +37,7 @@ void PCB::createStack(void* _this, void* _run, StackSize stackSize) {
     this->ss = FP_SEG(sPtr);
 
     #ifdef DEBUG__THREADS
-    cout << "[PCB] PCB created SP: " << this->sp << endl;
+    cout << "[PCB] PCB created SP: " << this->sp << endl << flush;
     #endif
 }
 
@@ -49,9 +49,9 @@ void PCB::start() {
     }
     else {
 #ifdef DEBUG__THREADS
-        cout << "PCB::start ERROR: Old thread trying to start!" << endl;
-        cout << "PCBs state was: " << PCBStateName[state] << endl;
-        cout << "PCBs ID was: " << id << endl;
+        cout << "PCB::start ERROR: Old thread trying to start!" << endl << flush;
+        cout << "PCBs state was: " << PCBStateName[state] << endl << flush;
+        cout << "PCBs ID was: " << id << endl << flush;
 #endif
         exit(1);
     }
@@ -64,9 +64,9 @@ void PCB::schedule() {
     }
     else {
 #ifdef DEBUG__THREADS
-        cout << "PCB::schedule ERROR: Non-running thread scheduling!" << endl;
-        cout << "PCBs state was: " << PCBStateName[state] << endl;
-        cout << "PCBs ID was: " << id << endl;
+        cout << "PCB::schedule ERROR: Non-running thread scheduling!" << endl << flush;
+        cout << "PCBs state was: " << PCBStateName[state] << endl << flush;
+        cout << "PCBs ID was: " << id << endl << flush;
 #endif
         exit(1);
     }
@@ -84,9 +84,9 @@ void PCB::dispatch() {
     }
     else {
 #ifdef DEBUG__THREADS
-        cout << "PCB::dispatch ERROR: Thread is not ready (blocked, new or stopped)!" << endl;
-        cout << "PCBs state was: " << PCBStateName[state] << endl;
-        cout << "PCBs ID was: " << id << endl;
+        cout << "PCB::dispatch ERROR: Thread is not ready (blocked, new or stopped)!" << endl << flush;
+        cout << "PCBs state was: " << PCBStateName[state] << endl << flush;
+        cout << "PCBs ID was: " << id << endl << flush;
 #endif
         exit(1);
     }
@@ -100,9 +100,9 @@ void PCB::block() {
     }
     else {
 #ifdef DEBUG__THREADS
-        cout << "PCB::block ERROR: Non-running thread blocking!" << endl;
-        cout << "PCBs state was: " << PCBStateName[state] << endl;
-        cout << "PCBs ID was: " << id << endl;
+        cout << "PCB::block ERROR: Non-running thread blocking!" << endl << flush;
+        cout << "PCBs state was: " << PCBStateName[state] << endl << flush;
+        cout << "PCBs ID was: " << id << endl << flush;
 #endif
         exit(1);
     }
@@ -114,13 +114,16 @@ void PCB::unblock() {
         Kernel::active_threads++;
         Kernel::ready_threads++;
         Kernel::blocked_threads--;
+        #ifdef DEBUG__THREADS
+        cout << "[PCB] unblocking pcb ID: " << this->id << endl << flush;
+        #endif
     }
     else {
-#ifdef DEBUG__THREADS
-        cout << "PCB::unblock ERROR: Only a blocked thread can be unblocked!" << endl;
-        cout << "PCBs state was: " << PCBStateName[state] << endl;
-        cout << "PCBs ID was: " << id << endl;
-#endif
+        #ifdef DEBUG__THREADS
+        cout << "PCB::unblock ERROR: Only a blocked thread can be unblocked!" << endl << flush;
+        cout << "PCBs state was: " << PCBStateName[state] << endl << flush;
+        cout << "PCBs ID was: " << id << endl << flush;
+        #endif
         exit(1);
     }
 }

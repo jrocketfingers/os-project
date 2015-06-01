@@ -4,6 +4,7 @@
 
 #include <debug.h>
 
+extern void _dispatch();
 
 KernSem::KernSem(int val) {
     this->value = val;
@@ -27,9 +28,9 @@ void KernSem::signal() {
         pcb->unblock();
     }
 
-#ifdef DEBUG__SEMAPHORES
-    cout << "[" << sid << "] Semaphore value after signal: " << value << endl;
-#endif
+    #ifdef DEBUG__SEMAPHORES
+    cout << "[" << sid << "] Semaphore value after signal: " << value << endl << flush;
+    #endif
 }
 
 
@@ -37,9 +38,10 @@ void KernSem::wait() {
     if(--value < 0) {
         blocked.put(Kernel::running);
         Kernel::running->block();
+        _dispatch();
     }
 
-#ifdef DEBUG__SEMAPHORES
-    cout << "[" << sid << "] Semaphore value after wait: " << value << endl;
-#endif
+    #ifdef DEBUG__SEMAPHORES
+    cout << "[" << sid << "] Semaphore value after wait: " << value << endl << flush;
+    #endif
 }

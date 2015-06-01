@@ -46,7 +46,7 @@ void SleepQ::put(PCB* sleeper, Time sleep) {
 
     #ifdef DEBUG__THREADS
     /* diagnostics */
-    cout << "Put to sleep: " << sleeper->id << "; for " << sleep << " ticks." << endl;
+    cout << "Put to sleep: " << sleeper->id << "; for " << sleep << " ticks." << endl << flush;
     #endif
 
     #ifdef DEBUG__SLEEP
@@ -57,7 +57,7 @@ void SleepQ::put(PCB* sleeper, Time sleep) {
         cursor = cursor->next;
     }
 
-    cout << endl;
+    cout << endl << flush;
     #endif
 }
 
@@ -72,8 +72,8 @@ void SleepQ::tick() {
 
             head->pcb->unblock();
             #ifdef DEBUG__VERBOSE
-            cout << "[SLEEPQ] Putting thread id " << head->pcb->id << " into scheduler." << endl;
-            cout << "[SLEEPQ] Thread's state is: " << PCBStateName[head->pcb->state] << endl;
+            cout << "[SLEEPQ] Putting thread id " << head->pcb->id << " into scheduler." << endl << flush;
+            cout << "[SLEEPQ] Thread's state is: " << PCBStateName[head->pcb->state] << endl << flush;
             #endif
             Scheduler::put(head->pcb);
 
@@ -95,6 +95,6 @@ void SleepQ::tick() {
         cursor = cursor->next;
     }
 
-    cout << endl;
+    cout << endl << flush;
     #endif
 }
