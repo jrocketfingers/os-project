@@ -52,9 +52,9 @@ public:
     static KThread kThread;
     static IThread iThread;
 
-    static PCB *running;
+    static PCB* volatile running;
 
-    static int tick;
+    static volatile int tick;
 };
 
 #endif

@@ -49,7 +49,7 @@ public:
     void schedule();
     void dispatch();
 
-    word sp, ss;
+    volatile word sp, ss;
 
     PCBState state;
 

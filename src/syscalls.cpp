@@ -45,6 +45,13 @@ void fetch_next_running_or_idle() {
 
 
 void switch_context() {
+    #ifdef DEBUG__THREADS
+    cout << "[Switch] SP adr: " << Kernel::running->sp << endl << flush;
+    #endif
+    #ifdef DEBUG__VERBOSE
+    cout << "[syscall]====================| syscall done" << endl;
+    #endif
+
     asm cli;
 
     Kernel::state = STATE_working;
@@ -86,6 +93,11 @@ void _dispatch() {
 
         Scheduler::put(Kernel::running);
     }
+    #ifdef DEBUG__THREADS
+    else {
+        cout << "Thread ID " << Kernel::running->id << ", state " << PCBStateName[Kernel::running->state] << "; not scheduled." << endl;
+    }
+    #endif
 
     #ifdef DEBUG__THREADS
     cout << "[DISPATCH] Active threads: " << Kernel::active_threads << endl;
@@ -137,7 +149,7 @@ void endThread(ThreadData *data) {
 void waitToComplete(ThreadData *data) {
     PCB* target = (*Kernel::PCBs)[data->tid];
 
-    if(target->state != STATE_stopped) {
+    if(target->state == STATE_ready || target->state == STATE_blocked) {
         target->blocking.put(Kernel::running);
         Kernel::running->block();
 
@@ -148,9 +160,12 @@ void waitToComplete(ThreadData *data) {
         _dispatch();
     }
     #ifdef DEBUG__THREADS
-    else
+    else if(target->state == STATE_stopped)
     {
         cout << "Thread already finished. [" << target->id << "] Not blocking." << endl;
+    }
+    else {
+        cout << "Blocking on a thread with illegal thread state (" << PCBStateName[target->state] << ")" << endl;
     }
     #endif
 }
@@ -239,7 +254,7 @@ void deleteEvent(unsigned *eid) {
 
 void dispatchSyscall(unsigned callID, void *data) {
     #ifdef DEBUG__VERBOSE
-    cout << "Call: " << callNames[callID] << endl;
+    cout << "[Call]=============| " << callNames[callID] << endl;
     #endif
 
     switch(callID) {

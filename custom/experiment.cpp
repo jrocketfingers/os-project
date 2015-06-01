@@ -9,7 +9,7 @@
 #include <pcb.h>
 #include <schedule.h>
 
-#define THDS 20
+#define THDS 100
 
 int i = 0;
 
@@ -17,19 +17,19 @@ Semaphore *s;
 
 class TestThread : public Thread {
 public:
-    TestThread(int v) : Thread(32) { this->v = v; }
+    TestThread(int v) : Thread(2048) { this->v = v; }
 
     void run() {
         cout << "Waiting. " << v << endl;
-        //s->wait();
+        s->wait();
         //cout << "Locked. " << v << ";" << endl;
-        for(unsigned long i = 0; i <= 65535; i++) {
-            if(i % 1000 == 0)
-                cout << v << ": " << i << endl;
+        for(unsigned long i = 0; i <= 100000000; i++) {
+            //if(i % 1000 == 0)
+                //cout << v << ": " << i << endl;
         }
         //Thread::sleep(v * 10);
         cout << "[EXPERIMENT] Finished " << v << endl;
-        //s->signal();
+        s->signal();
     }
 
 private:
@@ -40,7 +40,7 @@ private:
 int userMain(int argc, char *argv[]) {
     cout << "In userMain." << endl;
 
-    //s = new Semaphore();
+    s = new Semaphore(3);
 
     TestThread **t = new TestThread*[THDS];
 

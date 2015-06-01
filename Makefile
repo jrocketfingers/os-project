@@ -8,7 +8,7 @@ INCLUDES = h\*.h
 APIINCL = h\api\*.h
 
 LIBS = lib\*.lib
-INCLUDEPATH = C:\bc31\include;D:\h\;D:\test\;
+INCLUDEPATH = C:\bc31\include;D:\h\;D:\test\;D:\custom\;
 LIBSPATH = C:\bc31\lib;D:\lib\;
 
 APIOBJ = out\api\*.obj

@@ -25,7 +25,7 @@
 /* system threads */
 KThread Kernel::kThread;
 IThread Kernel::iThread;
-PCB*    Kernel::running = 0;
+PCB* volatile Kernel::running = 0;
 
 KernelState Kernel::state;
 
@@ -39,7 +39,7 @@ unsigned int oldTimerSEG;
 unsigned int oldTimerOFF;
 
 /* ticker */
-int Kernel::tick = 0;
+volatile int Kernel::tick = 0;
 
 /* sleeping queue */
 SleepQ Kernel::sleeping;
@@ -63,8 +63,18 @@ void interrupt systick() {
     /* if we're safe to preempt */
     if(Kernel::state == STATE_wakeup ||
       (Kernel::state == STATE_working && Kernel::tick >= Kernel::running->timeSlice)) {
-        /* syscall */
-        dispatch();
+        /* save stack */
+        Kernel::running->sp = _SP;
+        Kernel::running->ss = _SS;
+        #ifdef DEBUG__VERBOSE
+        cout << "[systick] SP save adr: " << Kernel::running->sp << endl;
+        #endif
+
+        /* direct stack switch */
+        Kernel::state = STATE_kmode;
+        /* switch to kernel stack */
+        Kernel::kThread.takeOver(SYS_dispatch, 0, 0); /* registers are null */
+
         Kernel::tick = 0;
     }
 }
@@ -74,19 +84,10 @@ void interrupt syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_d
                        unsigned p_es, unsigned p_dx, unsigned p_cx, unsigned p_bx,
                        unsigned p_ax, unsigned p_ip, unsigned p_cs, unsigned flags) {
     /* save stack */
-    if(Kernel::state == STATE_working || Kernel::state == STATE_wakeup) {
-        Kernel::running->sp = _SP;
-        Kernel::running->ss = _SS;
-    }
-    else if(Kernel::state == STATE_idle) {
-        Kernel::iThread.pcb->sp = _SP;
-        Kernel::iThread.pcb->ss = _SS;
-    }
-    #ifdef DEBUG
-    else {
-        cout << "Entering kernel mode from an illegal state." << endl;
-        exit(1);
-    }
+    Kernel::running->sp = _SP;
+    Kernel::running->ss = _SS;
+    #ifdef DEBUG__VERBOSE
+    cout << "[syscall] SP save adr: " << Kernel::running->sp << endl;
     #endif
 
     Kernel::state = STATE_kmode;
@@ -97,10 +98,8 @@ void interrupt syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_d
 
 
 void Kernel::init() {
-    asm cli;
-
     /* prepare the initial thread information */
-    PCB* userMain = new PCB(2); /* time slice = 2 */
+    PCB* userMain = new PCB(1); /* time slice = 2 */
     /* stackless thread; it uses the original stack*/
 
     /* make an available PCB listing, and add userMain */
@@ -114,6 +113,7 @@ void Kernel::init() {
     KernSems = new ffvector<KernSem*>(10);
 
     /* prepare IVT */
+    asm cli;
     asm {
         push es
         push ax

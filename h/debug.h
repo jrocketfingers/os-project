@@ -4,9 +4,9 @@
 #include <iostream.h>
 #include <stdlib.h>
 
-#define DEBUG
-#define DEBUG__VERBOSE
-#define DEBUG__THREADS
+//#define DEBUG
+//#define DEBUG__VERBOSE
+//#define DEBUG__THREADS
 //#define DEBUG__SLEEP
 //#define DEBUG__SEMAPHORES
 //#define DEBUG__EVENTS

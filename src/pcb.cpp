@@ -35,6 +35,10 @@ void PCB::createStack(void* _this, void* _run, StackSize stackSize) {
 
     this->sp = FP_OFF(sPtr);
     this->ss = FP_SEG(sPtr);
+
+    #ifdef DEBUG__THREADS
+    cout << "[PCB] PCB created SP: " << this->sp << endl;
+    #endif
 }
 
 void PCB::start() {

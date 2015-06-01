@@ -13,6 +13,7 @@ void Thread::start() {
     sys_startthread(this->tid);
 }
 
+
 Thread::~Thread() {
     waitToComplete();
 }
