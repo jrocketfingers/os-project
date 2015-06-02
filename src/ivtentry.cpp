@@ -21,7 +21,9 @@ IVTEntry::IVTEntry(IVTNo ivtno, ISR newISR) {
 
 IVTEntry::~IVTEntry() {
     asm cli;
+    #ifdef DEBUG__EVENTS
     cout << "Destroying IVT " << ivtno << endl << flush;
+    #endif
     oldISR();
     setvect(ivtno, oldISR);
     asm sti;
