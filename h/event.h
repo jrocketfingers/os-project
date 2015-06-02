@@ -11,6 +11,11 @@ IVTEntry entry##IvtNo(IvtNo, &ISR##IvtNo); \
 void interrupt ISR##IvtNo(...) { \
     if(old) entry##IvtNo.oldISR(); \
     entry##IvtNo.signalEv(); \
+    if(Kernel::state == STATE_kmode) { \
+        Kernel::event_flag = 1; \
+    } else { \
+        dispatch(); \
+    } \
 }
 
 class Event {

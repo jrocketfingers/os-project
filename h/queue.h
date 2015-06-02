@@ -1,6 +1,7 @@
 #ifndef __H_QUEUE__
 #define __H_QUEUE__
 
+#include <kernel.h>
 #include <debug.h>
 #include <api/types.h>
 
@@ -29,10 +30,10 @@ public:
 
     T get() {
         if(elements <= 0) {
-#ifndef DEBUG__QUEUE
-            cout << "Trying to get from an empty queue! Could also be that the elements variable corrupted." << endl << flush;
-#endif
-            exit(1);
+            #ifdef DEBUG__QUEUE
+            cout << "Trying to get from an empty queue! Could also be that the elements variable (" << elements << ") corrupted." << endl << flush;
+            #endif
+            Kernel::emergency_halt();
         }
 
         Elem* ret = head;
@@ -45,11 +46,15 @@ public:
 
     bool empty() {
         if(elements < 0) {
-#ifndef DEBUG__QUEUE
+            #ifndef DEBUG__QUEUE
             cout << "Elements value is negative. Something smells here." << endl << flush;
-#endif
-            exit(1);
+            #endif
+            Kernel::emergency_halt();
         }
+
+        #ifdef DEBUG__QUEUE
+        cout << "Queue elements: " << elements << endl << flush;
+        #endif
 
         return elements == 0;
         //return head == 0;

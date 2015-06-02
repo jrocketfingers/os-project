@@ -30,8 +30,8 @@ class Kernel {
 public:
     static void init();
     static void stop();
+    static void emergency_halt();
 
-    static tid_t enlistPCB(PCB *newPCB);
     static KernelState state;
 
     static void wake() { state = STATE_wakeup; }
@@ -42,6 +42,8 @@ public:
     static int ready_threads;
     static int blocked_threads;
     static int sleeping_threads;
+
+    static bool event_flag;
 
     static SleepQ sleeping;
 

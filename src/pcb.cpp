@@ -1,9 +1,10 @@
 /* default includes */
 #include <dos.h>        /* FP_OFF, FP_SEG, MK_FP macros */
-#include <stdlib.h>     /* exit */
 
 #include <pcb.h>        /* handles PCBs */
 #include <ffvector.h>   /* handles PCB storage */
+
+#include <kernel.h>
 
 #include <debug.h>
 
@@ -53,7 +54,7 @@ void PCB::start() {
         cout << "PCBs state was: " << PCBStateName[state] << endl << flush;
         cout << "PCBs ID was: " << id << endl << flush;
 #endif
-        exit(1);
+        Kernel::emergency_halt();
     }
 }
 
@@ -68,7 +69,7 @@ void PCB::schedule() {
         cout << "PCBs state was: " << PCBStateName[state] << endl << flush;
         cout << "PCBs ID was: " << id << endl << flush;
 #endif
-        exit(1);
+        Kernel::emergency_halt();
     }
 }
 
@@ -88,7 +89,7 @@ void PCB::dispatch() {
         cout << "PCBs state was: " << PCBStateName[state] << endl << flush;
         cout << "PCBs ID was: " << id << endl << flush;
 #endif
-        exit(1);
+        Kernel::emergency_halt();
     }
 }
 
@@ -104,7 +105,7 @@ void PCB::block() {
         cout << "PCBs state was: " << PCBStateName[state] << endl << flush;
         cout << "PCBs ID was: " << id << endl << flush;
 #endif
-        exit(1);
+        Kernel::emergency_halt();
     }
 }
 
@@ -124,7 +125,7 @@ void PCB::unblock() {
         cout << "PCBs state was: " << PCBStateName[state] << endl << flush;
         cout << "PCBs ID was: " << id << endl << flush;
         #endif
-        exit(1);
+        Kernel::emergency_halt();
     }
 }
 

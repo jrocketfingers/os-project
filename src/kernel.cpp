@@ -34,6 +34,8 @@ int Kernel::ready_threads       = 0;
 int Kernel::blocked_threads     = 0;
 int Kernel::sleeping_threads    = 0;
 
+bool Kernel::event_flag         = 0;
+
 /* original timer interrupt handler */
 unsigned int oldTimerSEG;
 unsigned int oldTimerOFF;
@@ -62,7 +64,9 @@ void interrupt systick() {
 
     /* if we're safe to preempt */
     if(Kernel::state == STATE_wakeup ||
-      (Kernel::state == STATE_working && Kernel::tick >= Kernel::running->timeSlice)) {
+      (Kernel::state == STATE_working && Kernel::tick >= Kernel::running->timeSlice) ||
+      (Kernel::state == STATE_working && Kernel::event_flag == 1)) {
+        Kernel::event_flag == 0;
         /* save stack */
         Kernel::running->sp = _SP;
         Kernel::running->ss = _SS;
@@ -158,7 +162,28 @@ void Kernel::init() {
 }
 
 
+void Kernel::emergency_halt() {
+    asm {
+        cli;
+
+        mov ax, 0
+        mov es, ax
+
+        mov ax, oldTimerOFF
+        mov word ptr es:0020h, ax
+        mov ax, oldTimerSEG
+        mov word ptr es:0022h, ax
+
+        sti;
+    }
+
+    exit(1);
+}
+
+
 void Kernel::stop() {
+    delete userMain;
+
     delete PCBs;
     delete KernSems;
     delete KernEvs;

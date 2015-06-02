@@ -13,7 +13,8 @@ KernSem::KernSem(int val) {
 
 KernSem::~KernSem() {
     PCB* pcb;
-    while(pcb = blocked.get()) {
+    while(!blocked.empty()) {
+        pcb = blocked.get();
         Scheduler::put(pcb);
         pcb->unblock();
     }

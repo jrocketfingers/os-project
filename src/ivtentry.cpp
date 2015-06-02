@@ -19,9 +19,10 @@ IVTEntry::IVTEntry(IVTNo ivtno, ISR newISR) {
     asm sti;
 }
 
-
 IVTEntry::~IVTEntry() {
     asm cli;
+    cout << "Destroying IVT " << ivtno << endl << flush;
+    oldISR();
     setvect(ivtno, oldISR);
     asm sti;
 }
@@ -39,5 +40,5 @@ void IVTEntry::signalEv() {
         return;
     }
 
-    sys_sigev(kevent->eid);
+    kevent->signal();
 }

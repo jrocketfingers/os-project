@@ -18,7 +18,7 @@ enum PCBState {
     STATE_idle
 };
 
-#ifdef DEBUG__THREADS
+#ifdef DEBUG__VERBOSE
 const char PCBStateName[][30] = {
     "INVALID STATE",
     "new",

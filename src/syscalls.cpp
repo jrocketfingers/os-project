@@ -45,10 +45,8 @@ void fetch_next_running_or_idle() {
 
 
 void switch_context() {
-    #ifdef DEBUG__THREADS
-    cout << "[Switch] Thread " << Kernel::running->id << " SP adr: " << Kernel::running->sp << endl << flush;
-    #endif
     #ifdef DEBUG__VERBOSE
+    cout << "[Switch] Thread " << Kernel::running->id << " SP adr: " << Kernel::running->sp << endl << flush;
     cout << "[syscall]====================| syscall done" << endl << flush;
     #endif
 
@@ -191,9 +189,6 @@ void newSemaphore(int *init) {
 void deleteSemaphore(unsigned *sid) {
     KernSem *sem = (*Kernel::KernSems)[*sid];
     PCB     *pcb;
-
-    while(pcb = sem->blocked.get())
-        Scheduler::put(pcb);
 
     Kernel::KernSems->remove(*sid);
 

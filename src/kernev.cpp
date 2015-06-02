@@ -19,28 +19,32 @@ KernEv::~KernEv() {
 }
 
 void KernEv::signal() {
-    val++;
-
-    /* unblocking case */
-    if(val >= 0) {
+    if(val++ < 0) {
+        #ifdef DEBUG__EVENTS
+        cout << "Event " << ivtno << " firing." << endl;
+        #endif
         Scheduler::put(creator);
         creator->unblock();
-        _dispatch();
     }
+
+    if(val > 1) val = 1;
 }
 
 void KernEv::wait() {
-    val--;
+    if(Kernel::running != creator) return;
 
     /* blocking case */
-    if(val < 0) {
+    if(--val < 0) {
+        #ifdef DEBUG__EVENTS
+        cout << "Event " << ivtno << " waiting." << endl;
+        #endif
         creator->block();
         _dispatch();
     }
 
-#ifdef DEBUG__EVENTS
+    #ifdef DEBUG__EVENTS
     /* diagnostics */
     if(val < -1)
         cout << "Event has waited more than once, error!" << endl << flush;
-#endif
+    #endif
 }
