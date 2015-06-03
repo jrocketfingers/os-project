@@ -23,11 +23,13 @@ void KernEv::signal() {
         #ifdef DEBUG__EVENTS
         cout << "Event " << ivtno << " firing." << endl;
         #endif
+        asm cli;
         Scheduler::put(creator);
+        asm sti;
         creator->unblock();
     }
 
-    if(val > 1) val = 1;
+    //if(val > 1) val = 1;
 }
 
 void KernEv::wait() {

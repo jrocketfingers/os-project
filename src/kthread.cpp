@@ -25,7 +25,7 @@ KThread::KThread() {
 
 
 void KThread::takeOver(unsigned callID, unsigned data_seg, unsigned data_off) {
-    asm cli;
+    //asm cli;
 
     unsigned *top = pcb->stack + this->stackSize;
 

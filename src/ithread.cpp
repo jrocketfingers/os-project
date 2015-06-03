@@ -24,7 +24,7 @@ IThread::~IThread() {
 }
 
 void IThread::takeOver() {
-    asm cli;
+    //asm cli;
 
     Kernel::idle();
     Kernel::running = this->pcb;

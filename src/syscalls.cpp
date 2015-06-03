@@ -50,7 +50,7 @@ void switch_context() {
     cout << "[syscall]====================| syscall done" << endl << flush;
     #endif
 
-    asm cli;
+    //asm cli;
 
     Kernel::state = STATE_working;
 
@@ -234,7 +234,7 @@ void sigEv(unsigned *eid) {
 
 void deleteEvent(unsigned *eid) {
     KernEv  *ev  = (*Kernel::KernEvs)[*eid];
-    PCB     *pcb = ev->creator;
+    //PCB     *pcb = ev->creator;
 
     /* this ought not be necessary, only the creator should be doing the
      * destruction. is there any other scenario? */

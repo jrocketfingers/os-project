@@ -13,10 +13,10 @@ IVTEntry::IVTEntry(IVTNo ivtno, ISR newISR) {
     this->ivtno = ivtno;
     IVT[ivtno]  = this;
 
-    asm cli;
-        oldISR = getvect(ivtno);
-        setvect(ivtno, newISR);
-    asm sti;
+    //asm cli;
+    oldISR = getvect(ivtno);
+    setvect(ivtno, newISR);
+    //asm sti;
 }
 
 IVTEntry::~IVTEntry() {

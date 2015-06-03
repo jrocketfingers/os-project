@@ -55,6 +55,7 @@ public:
     static IThread iThread;
 
     static PCB* volatile running;
+    static PCB* userMain;
 
     static volatile int tick;
 };

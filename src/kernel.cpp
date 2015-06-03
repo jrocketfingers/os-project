@@ -26,6 +26,7 @@
 KThread Kernel::kThread;
 IThread Kernel::iThread;
 PCB* volatile Kernel::running = 0;
+PCB* Kernel::userMain = 0;
 
 KernelState Kernel::state;
 
@@ -103,7 +104,7 @@ void interrupt syscall(unsigned p_bp, unsigned p_di, unsigned p_si, unsigned p_d
 
 void Kernel::init() {
     /* prepare the initial thread information */
-    PCB* userMain = new PCB(1000); /* time slice = 2 */
+    userMain = new PCB(1000); /* time slice = 2 */
     /* stackless thread; it uses the original stack*/
 
     /* make an available PCB listing, and add userMain */
@@ -118,7 +119,7 @@ void Kernel::init() {
     KernEvs  = new ffvector<KernEv*>(10);
 
     /* prepare IVT */
-    asm cli;
+    //asm cli;
     asm {
         push es
         push ax
@@ -158,7 +159,7 @@ void Kernel::init() {
     cout << "Kernel initialization finished." << endl << flush;
     #endif
 
-    asm sti;
+    //asm sti;
 }
 
 
@@ -182,6 +183,8 @@ void Kernel::emergency_halt() {
 
 
 void Kernel::stop() {
+    asm cli;
+
     delete userMain;
 
     delete PCBs;
