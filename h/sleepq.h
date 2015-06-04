@@ -1,7 +1,8 @@
 #ifndef __H_SLEEPQ__
 #define __H_SLEEPQ__
 
-#include <api/types.h>
+#include <api_type.h>
+#include <api_sys.h>
 
 class PCB;
 

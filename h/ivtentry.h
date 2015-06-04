@@ -1,7 +1,7 @@
 #ifndef __H_IVTENTRY__
 #define __H_IVTENTRY__
 
-#include <api/types.h>
+#include <api_type.h>
 #include <kernev.h>
 
 typedef void interrupt (*ISR)(...);

@@ -8,7 +8,9 @@
 IVTEntry* IVT[256];
 
 IVTEntry::IVTEntry(IVTNo ivtno, ISR newISR) {
+    #ifdef DEBUG__EVENTS
     cout << "Preparing event " << (int)ivtno << "; ISR: "<< newISR << endl;
+    #endif
     kevent      = 0;
     this->ivtno = ivtno;
     IVT[ivtno]  = this;

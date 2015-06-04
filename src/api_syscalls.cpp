@@ -1,5 +1,5 @@
 /* declaration header */
-#include <api/syscalls.h>
+#include <api_sys.h>
 
 /* dos dependencies */
 #include <dos.h>

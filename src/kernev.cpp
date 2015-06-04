@@ -14,8 +14,11 @@ KernEv::KernEv() {
 }
 
 KernEv::~KernEv() {
-    if(val < 0)
+    if(val < 0) {
+        asm cli;
         Scheduler::put(this->creator);
+        asm sti;
+    }
 }
 
 void KernEv::signal() {

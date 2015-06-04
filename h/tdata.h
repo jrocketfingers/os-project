@@ -1,7 +1,7 @@
 #ifndef __H_TDATA__
 #define __H_TDATA__
 
-#include <api/types.h>
+#include <api_type.h>
 
 struct ThreadData {
     void *_this;

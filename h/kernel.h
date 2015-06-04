@@ -3,7 +3,7 @@
 
 #include <thread.h>
 #include <dos.h>
-#include <api/types.h>
+#include <api_type.h>
 
 #include <kthread.h>
 #include <ithread.h>

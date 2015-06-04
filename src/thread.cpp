@@ -1,7 +1,5 @@
 #include <iostream.h>
 
-#include <api/types.h>
-#include <api/syscalls.h>
 #include <thread.h>
 
 Thread::Thread (StackSize stackSize, Time timeSlice) {

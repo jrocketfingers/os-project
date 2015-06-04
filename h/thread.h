@@ -4,8 +4,8 @@
 #include <stddef.h>
 #include <tdata.h>
 
-#include <api/types.h>
-#include <api/syscalls.h>
+#include <api_type.h>
+#include <api_sys.h>
 
 const StackSize defaultStackSize = 4096;
 const Time defaultTimeSlice = 2;            // x 55ms

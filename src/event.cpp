@@ -1,4 +1,3 @@
-#include <api/syscalls.h>
 #include <event.h>
 
 Event::Event(IVTNo ivtNo) {

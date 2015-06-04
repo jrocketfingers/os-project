@@ -7,7 +7,7 @@
 #include <queue.h>
 
 /* public apis */
-#include <api/types.h>
+#include <api_type.h>
 
 enum PCBState {
     STATE_new           =1,

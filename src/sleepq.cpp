@@ -1,6 +1,5 @@
 #include <sleepq.h>
 
-#include <api/syscalls.h>
 #include <schedule.h>
 #include <kernel.h>
 #include <pcb.h>
@@ -75,7 +74,10 @@ void SleepQ::tick() {
             cout << "[SLEEPQ] Putting thread id " << head->pcb->id << " into scheduler." << endl << flush;
             cout << "[SLEEPQ] Thread's state is: " << PCBStateName[head->pcb->state] << endl << flush;
             #endif
+
+            asm cli;
             Scheduler::put(head->pcb);
+            asm sti;
 
             Kernel::state = STATE_wakeup;
 

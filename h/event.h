@@ -1,7 +1,8 @@
 #ifndef __H_EVENT__
 #define __H_EVENT__
 
-#include <api/types.h>
+#include <api_type.h>
+#include <api_sys.h>
 
 #include <ivtentry.h>
 

@@ -2,7 +2,7 @@
 
 #include <semaphor.h>
 
-#include <api/syscalls.h>
+#include <api_sys.h>
 
 Semaphore::Semaphore(int init) {
     sid = sys_newsem(init);

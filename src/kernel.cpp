@@ -1,6 +1,6 @@
 #include <dos.h>
 
-#include <api/syscalls.h>
+#include <api_sys.h>
 #include <syscalls.h>
 #include <vector.h>
 #include <thread.h>
@@ -52,8 +52,13 @@ ffvector<PCB*>*     Kernel::PCBs        = 0;
 ffvector<KernSem*>* Kernel::KernSems    = 0;
 ffvector<KernEv*>*  Kernel::KernEvs     = 0;
 
+/* user defined tick */
+extern void tick();
+
 void interrupt systick() {
     asm int 60h; /* timer routine that we switched out */
+
+    tick();
 
     /* do not tick if the time slice is set to 0
      * unlimited runtime thread */

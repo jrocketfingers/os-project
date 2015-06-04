@@ -3,7 +3,7 @@
 
 #include <kernel.h>
 #include <debug.h>
-#include <api/types.h>
+#include <api_type.h>
 
 template <class T>
 class Queue {
